@@ -977,9 +977,14 @@ async function importCards(file){
 }
 
 setAuthMode("in");
-if(!window.supabase || !CFG.url || !CFG.key){
+const cfgBad = !CFG.url || !CFG.key || /ВСТАВЬ/.test(CFG.url+CFG.key) || /\/rest\/v1/.test(CFG.url);
+if(!window.supabase || cfgBad){
   if(lsGet(GUEST)==="1") startGuest(); else showGate(true);
-  authMsg(!window.supabase ? "Не загрузилась библиотека входа. Проверь интернет или включи VPN и обнови страницу." : "Сайт ещё не подключён к базе. Заполни config.js.","err");
+  authMsg(!window.supabase ? "Не загрузилась библиотека входа. Проверь интернет или включи VPN и обнови страницу."
+    : !window.KESHBEKER_CONFIG ? "Не загрузился config.js или в нём ошибка. Проверь, что файл загружен на сайт и кавычки в нём прямые \"…\", а не «…» или “…”."
+    : /ВСТАВЬ/.test(CFG.url+CFG.key) ? "В config.js остался текст ВСТАВЬ_СЮДА — впиши туда адрес проекта и ключ anon public."
+    : /\/rest\/v1/.test(CFG.url) ? "В config.js адрес проекта нужно указать без /rest/v1/ на конце."
+    : "Сайт ещё не подключён к базе. Заполни config.js.","err");
 } else {
   sb=window.supabase.createClient(CFG.url, CFG.key, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   let started=false;
