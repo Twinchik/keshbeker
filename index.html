@@ -113,7 +113,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
   background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
 .tabs button{flex:1;max-width:220px;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:12px;font-weight:600;border-radius:12px}
 .tabs button[aria-selected="true"]{color:var(--accent)}
-.tabs button:active{background:var(--surface-2)}
+.tabs button{-webkit-tap-highlight-color:transparent}
+.tabs button:active,.tabs button:focus:not(:focus-visible){background:transparent;outline:none}
 body:has(#viewTabs:not([hidden])){padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
 .shops{display:flex;flex-direction:column;gap:12px}
 .q2{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:13px 14px 13px 42px;font:inherit;font-size:16px;color:var(--ink)}
@@ -168,6 +169,41 @@ input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none;appeara
 html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 button,a,label,.card{touch-action:manipulation}
 @media (pointer:coarse){input,select,textarea{font-size:16px!important}}
+/* без полос прокрутки: листается как обычно, но полоска сбоку не показывается */
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{display:none;width:0;height:0;background:transparent}
+/* на телефоне прокручивается сама страница-контейнер — так айфон тоже не рисует полоску */
+@media (pointer:coarse){
+  html{height:100%;overflow:hidden}
+  body{height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;box-sizing:border-box}
+}
+/* анимации нижней панели: магазин подпрыгивает, карта приподнимается на 30° и падает обратно */
+.tabs svg{transition:transform .2s}
+.tabs button[data-view="shops"] svg{transform-origin:50% 100%}
+.tabs button[data-view="cards"] svg{transform-origin:15% 85%}
+.tabs button.anim[data-view="shops"] svg{animation:shopShake .6s ease-out}
+.tabs button.anim[data-view="cards"] svg{animation:cardLift .7s cubic-bezier(.3,.7,.3,1)}
+@keyframes shopShake{0%{transform:translateY(0) scale(1)}25%{transform:translateY(-7px) scale(1.04,.97)}45%{transform:translateY(0) scale(1.12,.86)}60%{transform:translateY(-3px) scale(.97,1.03)}75%{transform:translateY(0) scale(1.05,.95)}100%{transform:translateY(0) scale(1)}}
+@keyframes cardLift{0%{transform:rotate(0)}38%{transform:translateY(-3px) rotate(-30deg)}68%{transform:translateY(0) rotate(5deg)}82%{transform:rotate(-2deg)}100%{transform:rotate(0)}}
+/* плавное появление раздела */
+.viewin{animation:viewIn .32s cubic-bezier(.2,.8,.2,1)}
+@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.tabs button.anim svg,.viewin{animation:none}}
+/* экран загрузки: карта подпрыгивает */
+#splash{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease,visibility .35s}
+#splash.out{opacity:0;visibility:hidden;pointer-events:none}
+.sp-stage{position:relative;height:120px;display:flex;align-items:flex-end;justify-content:center}
+.sp-card{position:relative;width:132px;aspect-ratio:1.586;border-radius:15px;background:linear-gradient(135deg,#5b7cff,#7a3cf0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);transform-origin:50% 100%;animation:spBounce 1s cubic-bezier(.45,0,.55,1) infinite;margin-bottom:18px}
+.sp-card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(90% 120% at 110% -10%,rgba(255,255,255,.28),transparent 60%)}
+.sp-chip{position:absolute;left:14px;top:24px;width:20px;height:15px;border-radius:4px;background:linear-gradient(135deg,#e8e1ff,#b9a6ff)}
+.sp-line{position:absolute;left:14px;bottom:14px;width:34px;height:5px;border-radius:3px;background:rgba(255,255,255,.55)}
+.sp-pct{position:absolute;right:13px;bottom:6px;color:#fff;font:700 26px/1 var(--display)}
+.sp-shadow{position:absolute;bottom:4px;left:50%;width:110px;height:12px;margin-left:-55px;border-radius:50%;background:rgba(40,20,120,.22);filter:blur(4px);animation:spShadow 1s cubic-bezier(.45,0,.55,1) infinite}
+.sp-name{font:700 22px/1.1 var(--display);letter-spacing:-.01em}
+.sp-sub{color:var(--muted);font-size:13px}
+@keyframes spBounce{0%,100%{transform:translateY(0) scale(1.05,.95)}12%{transform:translateY(0) scale(1)}50%{transform:translateY(-22px) scale(.98,1.02)}88%{transform:translateY(0) scale(1)}}
+@keyframes spShadow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.7);opacity:.5}}
+@media (prefers-reduced-motion:reduce){.sp-card,.sp-shadow{animation:none}}
 /* search */
 .search{display:flex;flex-direction:column;gap:10px}
 .field{position:relative}
@@ -269,6 +305,11 @@ body.reordering{-webkit-user-select:none;user-select:none}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
 <body>
+<div id="splash" role="status" aria-label="Загрузка">
+  <div class="sp-stage"><div class="sp-card"><i class="sp-chip"></i><i class="sp-line"></i><b class="sp-pct">%</b></div><div class="sp-shadow"></div></div>
+  <div class="sp-name">Кешбекер</div>
+  <div class="sp-sub">Достаю карты…</div>
+</div>
 <div class="app">
   <header class="top">
     <div class="brand"><h1>Кешбекер</h1><span id="monthLbl"></span></div>
@@ -421,11 +462,176 @@ function rankCard(card, terms){
   if (base) return {p:base.p, item:base, base:true};
   return {p:0, item:null, base:true};
 }
+/* ---------- магазины → категория кешбека (по MCC-коду кассы) ---------- */
+// Банк определяет категорию по MCC-коду, который магазин ставит на своём терминале.
+// Ниже — типичные коды крупных сетей (по справочникам MCC и чекам). У отдельной точки код может отличаться.
+// В terms: обычные слова — точная категория; со знаком «~» — похожая, если точной нет ни на одной карте.
+const MCC_GROUPS={
+  fastfood:{label:"Фастфуд",mcc:"5814",terms:["фастфуд","фаст-фуд","фаст фуд","~кафе","~ресторан"]},
+  cafe:{label:"Кафе и рестораны",mcc:"5812",terms:["кафе","ресторан","~фастфуд"]},
+  bar:{label:"Бары",mcc:"5813",terms:["бар","~кафе","~ресторан"]},
+  bakery:{label:"Пекарни",mcc:"5462",terms:["пекарн","кондитер","выпечк","~фастфуд","~кафе","~продукт"]},
+  delivery:{label:"Доставка еды",mcc:"5812",terms:["доставка еды","доставк","~кафе","~ресторан","~фастфуд"]},
+  grocery:{label:"Супермаркеты",mcc:"5411",terms:["супермаркет","продукт"]},
+  alcohol:{label:"Алкоголь",mcc:"5921",terms:["алкогол","вино","~продукт","~супермаркет"]},
+  pharmacy:{label:"Аптеки",mcc:"5912",terms:["аптек","~здоровье","~медицин"]},
+  medical:{label:"Медицина",mcc:"8071",terms:["медицин","здоровье","анализ","клиник","~аптек"]},
+  optics:{label:"Оптика",mcc:"8043",terms:["оптик","~медицин","~здоровье"]},
+  taxi:{label:"Такси",mcc:"4121",terms:["такси"]},
+  carshare:{label:"Каршеринг и аренда",mcc:"7512",terms:["каршеринг","аренда авто","кикшеринг","~такси","~транспорт"]},
+  fuel:{label:"АЗС",mcc:"5541",terms:["азс","топливо","бензин","заправк"]},
+  auto:{label:"Автотовары",mcc:"5533",terms:["авто","запчаст","~азс"]},
+  parking:{label:"Парковки",mcc:"7523",terms:["парков","~транспорт","~авто"]},
+  transport:{label:"Транспорт",mcc:"4111",terms:["транспорт","проезд","метро"]},
+  rail:{label:"Ж/д билеты",mcc:"4112",terms:["жд","ж/д","поезд","~путешеств","~транспорт"]},
+  air:{label:"Авиабилеты",mcc:"4511",terms:["авиа","~путешеств"]},
+  travel:{label:"Путешествия",mcc:"4722",terms:["путешеств","турагент","туризм","~авиа"]},
+  hotel:{label:"Отели",mcc:"7011",terms:["отел","гостиниц","~путешеств"]},
+  clothes:{label:"Одежда и обувь",mcc:"5651",terms:["одежд","~обув"]},
+  shoes:{label:"Обувь",mcc:"5661",terms:["обув","~одежд"]},
+  bags:{label:"Сумки и аксессуары",mcc:"5948",terms:["сумк","аксессуар","~одежд"]},
+  jewelry:{label:"Ювелирные",mcc:"5944",terms:["ювелир","украшен"]},
+  dept:{label:"Универмаги",mcc:"5311",terms:["универмаг","~одежд"]},
+  discount:{label:"Товары для дома",mcc:"5310",terms:["универмаг","дисконт","~дом"]},
+  electronics:{label:"Электроника",mcc:"5732",terms:["электроник","техник","бытов"]},
+  beauty:{label:"Красота и косметика",mcc:"5977",terms:["красот","косметик","парфюм"]},
+  salon:{label:"Салоны красоты",mcc:"7230",terms:["салон","парикмах","красот"]},
+  home:{label:"Дом и ремонт",mcc:"5200",terms:["дом","ремонт","строй","мебел"]},
+  sport:{label:"Спорттовары",mcc:"5941",terms:["спорт"]},
+  fitness:{label:"Фитнес",mcc:"7941",terms:["фитнес","спорт"]},
+  kids:{label:"Детские товары",mcc:"5945",terms:["дет","игрушк"]},
+  pets:{label:"Зоотовары",mcc:"5995",terms:["животн","зоо"]},
+  books:{label:"Книги",mcc:"5942",terms:["книг"]},
+  office:{label:"Канцтовары",mcc:"5943",terms:["канцеляр","~книг"]},
+  cinema:{label:"Кино",mcc:"7832",terms:["кино","~развлечен"]},
+  events:{label:"Билеты и развлечения",mcc:"7922",terms:["развлечен","концерт","театр","~кино"]},
+  digital:{label:"Цифровые сервисы",mcc:"5815",terms:["цифров","подписк","онлайн-кино","~кино","~развлечен"]},
+  telecom:{label:"Связь",mcc:"4814",terms:["связь","мобильн","интернет"]},
+  edu:{label:"Образование",mcc:"8299",terms:["образован","обучен","курс"]},
+  flowers:{label:"Цветы",mcc:"5992",terms:["цветы","цветоч","флорист"]},
+  gifts:{label:"Подарки",mcc:"5947",terms:["подар","сувенир"]},
+  utilities:{label:"ЖКХ и услуги",mcc:"4900",terms:["жкх","коммунал","~услуг"]},
+  market:{label:"Маркетплейсы",mcc:"5399",terms:["маркетплейс","онлайн"]}
+};
+// MCC-код → группа (для поиска по номеру, например «5814»)
+const MCC_CODES={"5814":"fastfood","5812":"cafe","5811":"cafe","5813":"bar","5462":"bakery","5441":"bakery",
+  "5411":"grocery","5499":"grocery","5422":"grocery","5451":"grocery","5300":"grocery","5921":"alcohol",
+  "5912":"pharmacy","5122":"pharmacy","8071":"medical","8099":"medical","8011":"medical","8062":"medical","8021":"medical","8043":"optics",
+  "4121":"taxi","7512":"carshare","7513":"carshare","7519":"carshare","5541":"fuel","5542":"fuel","5983":"fuel","5172":"fuel",
+  "5533":"auto","5531":"auto","5532":"auto","7538":"auto","7542":"auto","7523":"parking","4784":"transport",
+  "4111":"transport","4131":"transport","4112":"rail","4511":"air","3000":"air","4722":"travel","4411":"travel","7011":"hotel","7012":"hotel",
+  "5651":"clothes","5691":"clothes","5699":"clothes","5621":"clothes","5611":"clothes","5631":"clothes","5681":"clothes","5661":"shoes",
+  "5948":"bags","5944":"jewelry","5311":"dept","5310":"discount","5331":"discount",
+  "5732":"electronics","5722":"electronics","5045":"electronics","5734":"electronics","5946":"electronics","5977":"beauty","7230":"salon","7298":"salon","7297":"salon",
+  "5200":"home","5211":"home","5251":"home","5261":"home","5712":"home","5713":"home","5714":"home","5719":"home","5231":"home",
+  "5941":"sport","5655":"sport","7941":"fitness","7997":"fitness","5641":"kids","5945":"kids",
+  "5995":"pets","0742":"pets","5942":"books","5994":"books","5943":"office","5111":"office","7832":"cinema","7922":"events","7996":"events","7999":"events","7991":"events",
+  "5815":"digital","5816":"digital","5817":"digital","5818":"digital","4812":"telecom","4814":"telecom","4899":"telecom",
+  "8299":"edu","8220":"edu","8211":"edu","5992":"flowers","5193":"flowers","5947":"gifts","4900":"utilities","5399":"market","5262":"market","5964":"market"};
+// Сети: «название|другое написание|…:группа;»
+const MERCHANTS_RAW=`Ростикс|rostics|rostic's|kfc|кфс:fastfood;Вкусно — и точка|вкусно и точка|вкусно-и точка|вкусноиточка|вкусно|макдоналдс|mcdonalds|макдак:fastfood;
+Бургер Кинг|burger king|бургеркинг|бк:fastfood;Додо Пицца|додо|dodo:fastfood;Теремок:fastfood;Subway|сабвей:fastfood;Папа Джонс|papa johns:fastfood;
+Крошка Картошка:fastfood;Black Star Burger|блэк стар бургер:fastfood;Шаурма|шаверма|шаурмичная:fastfood;Цех85|цех 85:fastfood;Буше|bushe:bakery;
+Штолле|stolle:bakery;Хлебник:bakery;Волконский|пекарня волконский:bakery;Хлеб насущный:bakery;Братья Караваевы|караваевы|кулинарная лавка братьев караваевых:bakery;
+Cofix|кофикс:fastfood;Даблби|double b|дабл би:fastfood;Surf Coffee|сёрф кофе|серф кофе:fastfood;One Price Coffee|ван прайс кофе:fastfood;Stars Coffee|старс кофе|starbucks|старбакс:fastfood;
+Coffee Like|кофе лайк:fastfood;Кофе Хауз|coffee house:fastfood;Domino's|доминос|домино пицца:fastfood;Ташир пицца|ташир:fastfood;Стардогс|stardogs:fastfood;
+Суши Wok|суши вок:fastfood;Му-Му|муму:fastfood;Грабли:fastfood;Кухня на районе:delivery;Яндекс Еда|yandex eda:delivery;Delivery Club|деливери клаб:delivery;
+Шоколадница:cafe;Кофемания:cafe;Чайхона №1|чайхона:cafe;Тануки:cafe;Якитория:cafe;Il Patio|иль патио:cafe;Планета Суши:cafe;Евразия:cafe;Мама Рома:cafe;Хачапурная|Хинкальная:cafe;
+Пятёрочка|пятерочка|5ка:grocery;Магнит|магнит у дома|магнит семейный:grocery;Перекрёсток|перекресток:grocery;ВкусВилл|вкусвилл|vkusvill:grocery;Лента:grocery;Ашан|auchan:grocery;
+Дикси:grocery;О'Кей|окей|o'key:grocery;Азбука Вкуса:grocery;Глобус|гиперглобус:grocery;Metro Cash & Carry|metro c&c|метро кэш:grocery;Самокат:grocery;Яндекс Лавка|лавка:grocery;
+Светофор:grocery;Чижик:grocery;Spar|спар|евроспар:grocery;Монетка:grocery;Мария-Ра|мария ра:grocery;Верный:grocery;Ярче:grocery;Бахетле:grocery;Магнолия:grocery;
+Купер|сбермаркет|kuper:grocery;Утконос:grocery;Табрис:grocery;Мясницкий ряд:grocery;Командор:grocery;Fresh market:grocery;
+Красное&Белое|красное и белое|красное белое|кб:alcohol;Бристоль:alcohol;ВинЛаб|винлаб:alcohol;Simple Wine|симпл вайн:alcohol;Ароматный мир:alcohol;Норман:alcohol;
+Ригла:pharmacy;Горздрав:pharmacy;36,6|36.6|аптека 36:pharmacy;Аптека.ру|аптека ру:pharmacy;ЕАптека|еаптека:pharmacy;Столички:pharmacy;Асна:pharmacy;Здравсити|zdravcity:pharmacy;
+Озерки:pharmacy;Живика:pharmacy;Апрель|аптека апрель:pharmacy;Планета здоровья:pharmacy;Здоров.ру|здоров ру:pharmacy;Аптека Вита|вита:pharmacy;Мелодия здоровья:pharmacy;
+Невис:pharmacy;Неофарм:pharmacy;Самсон-фарма|самсон фарма:pharmacy;Максавит:pharmacy;Будь здоров:pharmacy;Ваша аптека:pharmacy;
+Инвитро|invitro:medical;Гемотест:medical;KDL|кдл:medical;Хеликс|helix:medical;Ситилаб:medical;Медси|medsi:medical;СМ-Клиника|см клиника:medical;
+Линзмастер:optics;Очкарик:optics;
+Яндекс Go|яндекс го|яндекс такси|yandex go:taxi;Ситимобил:taxi;Такси Максим|максим:taxi;Uber|убер:taxi;Везёт|везет:taxi;Kiwitaxi|кивитакси:taxi;
+Делимобиль:carshare;Яндекс Драйв:carshare;BelkaCar|белкакар:carshare;Ситидрайв|citydrive:carshare;Whoosh|вуш:carshare;Юрент|urent:carshare;
+Лукойл:fuel;Роснефть:fuel;Газпромнефть|газпром нефть:fuel;Татнефть:fuel;Shell|шелл:fuel;Teboil|тебойл:fuel;BP|бп:fuel;Башнефть:fuel;Нефтьмагистраль:fuel;
+Трасса:fuel;ПТК:fuel;Сургутнефтегаз:fuel;Neste|несте:fuel;Яндекс Заправки:fuel;
+Exist|экзист:auto;Автодок|autodoc:auto;Emex|емекс:auto;Колесо.ру|колесо ру:auto;Московский паркинг|моспаркинг|парковки москвы:parking;
+Тройка|карта тройка:transport;Подорожник:transport;Мосгортранс:transport;Аэроэкспресс:transport;ЦППК:transport;
+РЖД|ржд:rail;Туту|tutu:rail;
+Аэрофлот|aeroflot:air;S7|эс севен:air;Победа (авиакомпания)|победа:air;Уральские авиалинии|уральские:air;Utair|ютэйр:air;Nordwind|нордвинд:air;Red Wings|ред вингс:air;Азимут:air;
+Слетать.ру|слетать:travel;Travelata|травелата:travel;Level.Travel|левел тревел:travel;Aviasales|авиасейлс:travel;OneTwoTrip|onetwotrip:travel;
+Островок|ostrovok:hotel;Суточно:hotel;Яндекс Путешествия:hotel;Booking|букинг:hotel;Отелло:hotel;Броневик|bronevik:hotel;
+Zara|зара|maag|мааг:clothes;H&M|эйч энд эм:clothes;Befree|бифри:clothes;Gloria Jeans|глория джинс|глория:clothes;O'stin|ostin|остин:clothes;Love Republic|лав репаблик:clothes;
+Lamoda|ламода:clothes;Твоё|твое:clothes;Uniqlo|юникло:clothes;Mango|манго:clothes;Снежная Королева:clothes;Sela|села:clothes;Concept Club|концепт клаб:clothes;
+Zarina|зарина:clothes;Incity|инсити:clothes;Finn Flare|финн флаер:clothes;Модис|modis:clothes;Familia|фамилия:clothes;Oodji|оджи:clothes;Ecru|екрю:clothes;
+Vilet|вилет:clothes;Lime|лайм:clothes;12 Storeez:clothes;Gate31:clothes;Calzedonia|кальцедония:clothes;Intimissimi:clothes;Tezenis:clothes;
+Kari|кари:shoes;Rendez-Vous|рандеву:shoes;Ecco|экко:shoes;Zenden|зенден:shoes;Ralf Ringer|ральф рингер:shoes;Respect|респект:shoes;ЦентрОбувь|центробувь:shoes;
+Thomas Munz|томас мюнц:shoes;Эконика|econika:shoes;Unichel|юничел:shoes;
+Samsonite|самсонайт:bags;1000 и одна сумка|тысяча и одна сумка:bags;
+Sokolov|соколов:jewelry;Sunlight|санлайт:jewelry;585 Gold|585 золотой|585:jewelry;Адамас|adamas:jewelry;Pandora|пандора:jewelry;Эстет:jewelry;
+ЦУМ:dept;ГУМ:dept;
+Fix Price|фикс прайс|fixprice|фиксик:discount;Галамарт:discount;Miniso|минисо:discount;Улыбка радуги:beauty;
+DNS|днс:electronics;М.Видео|мвидео|м видео:electronics;Эльдорадо:electronics;Ситилинк|citilink:electronics;re:Store|рестор:electronics;Технопарк:electronics;
+Холодильник.ру|холодильник ру:electronics;Онлайн Трейд|онлайнтрейд:electronics;ЧиП и ДиП|чип и дип:electronics;Xiaomi|сяоми|ксиоми:electronics;Samsung|самсунг:electronics;
+Huawei|хуавей:electronics;Мир Музыки:electronics;Связной:electronics;
+Золотое Яблоко|золотое яблоко|зя:beauty;Л'Этуаль|летуаль|лэтуаль|l'etoile:beauty;Рив Гош|ривгош:beauty;Подружка:beauty;Магнит Косметик:beauty;Ив Роше|yves rocher:beauty;
+L'Occitane|локситан:beauty;Иль де Ботэ|ile de beaute:beauty;Faberlic|фаберлик:beauty;Oriflame|орифлейм:beauty;Атоми|atomy:beauty;
+Чио Чио:salon;Цирюльник:salon;
+Леруа Мерлен|леруа|lemana pro|лемана про|лемана:home;ОБИ|obi:home;Петрович:home;Hoff|хофф:home;IKEA|икеа|swed house:home;Максидом:home;Всеинструменты.ру|все инструменты|всеинструменты:home;
+Castorama|касторама:home;Бауцентр:home;Твой Дом:home;Cozy Home|кози хоум:home;Askona|аскона:home;Орматек:home;Много Мебели:home;Шатура:home;Lazurit|лазурит:home;Zara Home|зара хоум:home;
+Спортмастер|sportmaster:sport;Декатлон|desport|decathlon:sport;Триал-Спорт|триал спорт:sport;Kant|кант:sport;Экспедиция:sport;
+World Class|ворлд класс:fitness;Fitness House|фитнес хаус:fitness;X-Fit|икс фит:fitness;DDX|ддх:fitness;Spirit Fitness|спирит фитнес:fitness;Alex Fitness|алекс фитнес:fitness;Территория фитнеса:fitness;
+Детский мир:kids;Гулливер|gulliver:kids;Toy.ru|той ру:kids;Hamleys|хэмлис:kids;Дочки-Сыночки|дочки сыночки:kids;Кораблик:kids;
+Четыре лапы|4 лапы:pets;Бетховен:pets;Зоозавр:pets;Petshop|петшоп:pets;Зоомир:pets;Старая ферма:pets;
+Читай-город|читай город:books;Буквоед:books;Литрес|litres:books;Республика:books;Московский дом книги|мдк:books;Лабиринт|labirint:books;Book24|бук24:books;Подписные издания:books;
+Комус|komus:office;
+Синема Парк|формула кино:cinema;КАРО|karo:cinema;Киномакс:cinema;Синема Стар|cinema star:cinema;Мираж Синема:cinema;Киноплекс:cinema;Люксор|luxor:cinema;
+Яндекс Афиша:events;Кассир.ру|кассир:events;Ticketland|тикетленд:events;Концерт.ру|концерт ру:events;
+Кинопоиск:digital;Иви|ivi:digital;Okko|окко:digital;Яндекс Плюс:digital;Кион|kion:digital;Wink|винк:digital;Premier|премьер:digital;More.tv|море тв:digital;
+VK Музыка|вк музыка:digital;Звук|сбер звук:digital;Steam|стим:digital;PlayStation Store|playstation:digital;
+МТС|mts:telecom;Билайн|beeline:telecom;МегаФон|мегафон:telecom;Т2|tele2|теле2:telecom;Ростелеком:telecom;Yota|йота:telecom;Дом.ру|дом ру:telecom;МГТС:telecom;Т-Мобайл|тинькофф мобайл:telecom;СберМобайл:telecom;
+Skillbox|скиллбокс:edu;Яндекс Практикум|практикум:edu;Нетология:edu;GeekBrains|гикбрейнс:edu;Skyeng|скайенг:edu;Фоксфорд|foxford:edu;Учи.ру|учи ру:edu;
+Флорист.ру|флорист:flowers;Flowwow|флаувау:flowers;Семицветик:flowers;
+AnyGift|энигифт:gifts;Giftery|гифтери:gifts;Подарок.ру:gifts;
+Мосэнергосбыт:utilities;МОЭК:utilities;Госуслуги|gosuslugi:utilities;
+Wildberries|вайлдберриз|валберис|вб|wb:market;Ozon|озон:market;Яндекс Маркет|yandex market:market;Мегамаркет|сбермегамаркет:market;AliExpress|алиэкспресс|али:market;
+Магнит Маркет|kazanexpress|казанэкспресс:market;Авито|avito:market`;
+const MERCHANTS=MERCHANTS_RAW.split(";").map(x=>x.trim()).filter(Boolean).map(x=>{ const i=x.lastIndexOf(":"); return [x.slice(0,i).split("|").map(s=>s.trim()), x.slice(i+1).trim()]; }).filter(([n,k])=>MCC_GROUPS[k]);
+// найти сеть или MCC-код по запросу
+function merchantFor(q){
+  const nq=norm(q).replace(/[«»"']/g,"").trim(); if(nq.length<2) return null;
+  if(/^\d{4}$/.test(nq)){ const key=MCC_CODES[nq] || (+nq>=3000 && +nq<=3350 ? "air" : +nq>=3351 && +nq<=3500 ? "carshare" : +nq>=3501 && +nq<=3999 ? "hotel" : null);
+    if(key){ const g=MCC_GROUPS[key]; return {name:"MCC "+nq, key, ...g, mcc:nq, byCode:true}; } return null; }
+  let best=null;
+  for(const [names,key] of MERCHANTS) for(const n of names){ const nn=norm(n).replace(/[«»"']/g,"");
+    let sc = nq===nn ? 3 : (nq.length>=4 && nn.startsWith(nq)) ? 2 : (nq.length>=4 && nn.length>=4 && nq.startsWith(nn)) ? 1 : 0;
+    if(sc && (!best || sc>best.sc)) best={sc, name:names[0], key}; }
+  return best ? {name:best.name, key:best.key, ...MCC_GROUPS[best.key]} : null;
+}
+function merchantSuggestions(q){
+  const nq=norm(q); if(nq.length<2) return [];
+  const out=[], seen=new Set();
+  for(const [names,key] of MERCHANTS){
+    const hit=names.find(n=>norm(n).startsWith(nq) || (nq.length>=3 && norm(n).includes(nq))); if(!hit || seen.has(names[0])) continue; seen.add(names[0]);
+    const g=MCC_GROUPS[key]; let best=null;
+    const prim=g.terms.filter(t=>!t.startsWith("~")), sim=g.terms.filter(t=>t.startsWith("~")).map(t=>t.slice(1));
+    for(const ts of [prim,sim]){ if(best||!ts.length) break;
+      for(const c of cards) for(const it of c.items||[]) if(!isBase(it.n) && matches(it,ts) && (!best||it.p>best.p)) best={p:it.p,bank:c.bank}; }
+    if(best) out.push({n:names[0], p:best.p, bank:best.bank, kind:"merchant", cat:g.label});
+    if(out.length>=4) break;
+  }
+  return out;
+}
+
 function ranking(){
-  const terms = expand(query); if(!terms.length) return null;
-  const r = cards.map(c => ({card:c, ...rankCard(c,terms)}));
-  r.sort((a,b)=> (a.base-b.base) || (b.p-a.p));
-  return {terms, list:r};
+  let terms = expand(query); if(!terms.length) return null;
+  // сеть магазинов или MCC-код → добавляем её категорию (Ростикс → Фастфуд)
+  const merchant = merchantFor(query);
+  // сначала ищем точную категорию (Фастфуд), и только если её нет ни на одной карте — похожую (Кафе) — «~» в списке
+  const primary = merchant ? merchant.terms.filter(t=>!t.startsWith("~")) : [];
+  const similar = merchant ? merchant.terms.filter(t=>t.startsWith("~")).map(t=>t.slice(1)) : [];
+  const rank = ts => { const r = cards.map(c => ({card:c, ...rankCard(c,ts)})); r.sort((a,b)=> (a.base-b.base) || (b.p-a.p)); return r; };
+  terms=[...terms, ...primary.filter(t=>!terms.includes(t))];
+  let r = rank(terms), viaSimilar=false;
+  if(similar.length && r.every(x=>x.base)){ terms=[...terms, ...similar]; r=rank(terms); viaSimilar=!r.every(x=>x.base); }
+  // в «следом» не подмешиваем похожие категории, если точная нашлась
+  return {terms, list:r, merchant, viaSimilar};
 }
 
 /* ---------- render ---------- */
@@ -477,7 +683,9 @@ function renderAnswer(rk){
   const box=$("#answerBox");
   if(!rk){ box.innerHTML=""; return; }
   const loose=(looseDoc().shops||[]).filter(sh=>matches(sh,[rk.terms[0]])).sort((a,b)=>b.p-a.p)[0];
-  const extra = loose ? `<p class="note" style="margin:8px 0 0">В самом магазине «${esc(loose.n)}» свой кешбек ${fmtP(loose.p)}, без карты.</p>` : "";
+  const mer=rk.merchant;
+  const merNote = mer ? `<p class="note" style="margin:8px 0 0">${mer.byCode ? `${esc(mer.name)} — это категория «${esc(mer.label)}».` : `«${esc(cap(mer.name))}» обычно проходит как «${esc(mer.label)}»${mer.mcc?` (код кассы MCC ${esc(mer.mcc)})`:""}. В отдельных точках код может отличаться.`}${rk.viaSimilar?` Такой категории на твоих картах нет — показываю похожую.`:""}</p>` : "";
+  const extra = merNote + (loose ? `<p class="note" style="margin:8px 0 0">В самом магазине «${esc(loose.n)}» свой кешбек ${fmtP(loose.p)}, без карты.</p>` : "");
   const top=rk.list[0];
   if(!top){ box.innerHTML=""; return; }
   if(top.base){
@@ -717,11 +925,14 @@ function suggestions(q){
   // только то, что сам пользователь вписал в карты и магазины
   const terms=expand(q);
   const out=[];
+  const own=new Set([...m.keys()]);
   for(const x of m.values()){ const n=norm(x.n);
     let score = n.startsWith(nq)?3 : n.split(/[\s-]+/).some(w=>w.startsWith(nq))?2.5 : (nq.length>=2 && n.includes(nq))?2 : (nq.length>=3 && x.p!=null && matches(x,terms))?1 : 0;
     if(!score) continue; out.push({...x,score}); }
   out.sort((a,b)=> b.score-a.score || ((b.p??-1)-(a.p??-1)) || a.n.localeCompare(b.n,"ru"));
-  return out.slice(0,7);
+  // сети магазинов: «Ростикс → Фастфуд», если такая категория есть на твоих картах
+  const mer=merchantSuggestions(q).filter(x=>!own.has(norm(x.n)));
+  return [...out.slice(0,7-Math.min(3,mer.length)), ...mer.slice(0,3)];
 }
 function hl(name,q){ const i=norm(name).indexOf(norm(q)); if(i<0||!q) return esc(name); return esc(name.slice(0,i))+"<mark>"+esc(name.slice(i,i+q.length))+"</mark>"+esc(name.slice(i+q.length)); }
 function drawSuggest(){
@@ -731,7 +942,7 @@ function drawSuggest(){
   if(sugItems.length===1 && norm(sugItems[0].n)===norm(q)) sugItems=[];
   sugIdx=-1;
   box.hidden=!sugItems.length; $("#q").setAttribute("aria-expanded",String(!!sugItems.length));
-  box.innerHTML=sugItems.map((x,i)=>`<li role="option"><button type="button" data-s="${i}"><span class="s-n">${hl(x.n,q)}${x.kind==="shop"?"<small>магазин</small>":""}</span><span class="s-r">${x.p!=null?`${esc(x.bank)} <b>${fmtP(x.p)}</b>`:"нет на картах"}</span></button></li>`).join("");
+  box.innerHTML=sugItems.map((x,i)=>`<li role="option"><button type="button" data-s="${i}"><span class="s-n">${hl(x.n,q)}${x.kind==="shop"?"<small>магазин</small>":x.kind==="merchant"?`<small>→ ${esc(x.cat)}</small>`:""}</span><span class="s-r">${x.p!=null?`${esc(x.bank)} <b>${fmtP(x.p)}</b>`:"нет на картах"}</span></button></li>`).join("");
 }
 function pickSuggest(i){ const x=sugItems[i]; if(!x) return; query=x.n; clearTimeout(typeT); lastCounted=""; recordSearch(x.n); $("#q").value=x.n; selected=null; $("#suggest").hidden=true; $("#q").setAttribute("aria-expanded","false"); render(); $("#q").blur(); }
 $("#suggest").addEventListener("pointerdown",e=>e.preventDefault());   // не теряем фокус до выбора
@@ -978,7 +1189,14 @@ function setView(v){
   $("#addBtn").innerHTML = v==="cards" ? '<span aria-hidden="true">+</span> Карта' : '<span aria-hidden="true">+</span> Магазин';
   if(v==="shops") renderShops(); else render();
 }
-$("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-view]"); if(b) setView(b.dataset.view); });
+$("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-view]"); if(!b) return;
+  // перезапускаем анимацию иконки даже при повторном нажатии
+  b.classList.remove("anim"); void b.offsetWidth; b.classList.add("anim");
+  b.addEventListener("animationend",()=>b.classList.remove("anim"),{once:true});
+  const changed=b.dataset.view!==view; setView(b.dataset.view);
+  if(changed){ const els = view==="shops" ? [$("#shopsView")] : [...document.querySelectorAll("#cardsView > *")];
+    els.forEach(el=>{ el.classList.remove("viewin"); void el.offsetWidth; el.classList.add("viewin"); el.addEventListener("animationend",()=>el.classList.remove("viewin"),{once:true}); }); }
+});
 function shopGroups(){
   const m=new Map();
   for(const c of [...cards, looseDoc()]) for(const sh of c.shops||[]){
@@ -1205,7 +1423,15 @@ $("#trashBtn").addEventListener("click",openTrash);
 
 /* ---------- account ---------- */
 let account={viewer:null,synced:false};
-function showGate(on){ $("#gate").hidden=!on; $("#main").style.display=on?"none":"contents"; $("#addBtn").hidden=on; $("#acctBtn").hidden=on; }
+// экран загрузки убираем, когда понятно, что показывать: карты, гостевой режим или вход
+const splashStart=Date.now(); let splashGone=false;
+function hideSplash(){
+  if(splashGone) return; splashGone=true;
+  const wait=Math.max(0,700-(Date.now()-splashStart));   // не мигать: показываем хотя бы 0,7 с
+  setTimeout(()=>{ const el=document.getElementById("splash"); if(!el) return; el.classList.add("out"); setTimeout(()=>el.remove(),400); },wait);
+}
+setTimeout(hideSplash,8000);   // на всякий случай, если сеть совсем не отвечает
+function showGate(on){ if(on) hideSplash(); $("#gate").hidden=!on; $("#main").style.display=on?"none":"contents"; $("#addBtn").hidden=on; $("#acctBtn").hidden=on; }
 $("#guestBtn").addEventListener("click",()=>{ if(lsGet(GUEST)!=="1") setAll([]); startGuest(); });
 function drawAvatar(){ const b=$("#acctBtn"); b.hidden=false; fillAvatar(b); }
 // своя аватарка хранится отдельной записью "_profile" рядом с картами
@@ -1309,7 +1535,7 @@ function startSynced(){
   unsub=col.onSnapshot(snap=>{
     setAll(applyOrderOverride(snap.docs.map(d=>({...d.data(),id:d.id}))));
     mergeGuest();
-    applyRoll(); writeLS(allCards); drawAvatar();
+    applyRoll(); writeLS(allCards); drawAvatar(); hideSplash();
     if(editing) return; render();
   }, e=>setStatus("Нет связи с базой: "+(e.message||e)+". Проверь интернет или VPN."));
 }
@@ -1327,6 +1553,7 @@ function loginFromGuest(){
   showGate(true); setTimeout(()=>$("#authEmail").focus(),50);
 }
 function startGuest(){
+  hideSplash();
   lsSet(GUEST,"1");
   account={viewer:null, synced:false}; drawAvatar(); showGate(false);
   store={ save:async()=>writeLS(allCards), remove:async()=>writeLS(allCards) };
