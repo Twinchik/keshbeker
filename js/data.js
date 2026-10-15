@@ -73,10 +73,18 @@ let editing = null;
 $("#monthLbl").textContent = "Категории на " + monthName(nowMonth());
 
 /* ---------- search ---------- */
+// названия сетей и сервисов в SYN: по ним группа находится, но сами они в поиск не подмешиваются —
+// иначе «пятёрочка» находила категорию «Самокат в городе», а «озон» — «Wildberries»
+const SYN_BRANDS = new Set(["магнит","пятерочк","перекрест","вкусвилл","лента","ашан","дикси","самокат","лавка",
+  "яндекс go","ситимобил","wildberries","вайлдберриз","ozon","озон","lamoda","золотое яблоко","летуаль",
+  "леруа","икеа","hoff","днс","м.видео","мвидео","эльдорадо"]);
+const synHit = (g, nq) => g.some(t => t.includes(nq) || (nq.length>=3 && nq.includes(t)));
+// запрос относится к какой-то группе синонимов (обычное слово вроде «такси» или сеть вроде «магнит»)
+const inSynGroup = q => { const nq=norm(q); return !!nq && SYN.some(g => synHit(g, nq)); };
 function expand(q){
   const nq = norm(q); if(!nq) return [];
   const terms = new Set([nq]);
-  for (const g of SYN) if (g.some(t => t.includes(nq) || (nq.length>=3 && nq.includes(t)))) g.forEach(t=>terms.add(t));
+  for (const g of SYN) if (synHit(g, nq)) g.forEach(t=>{ if(!SYN_BRANDS.has(t)) terms.add(t); });
   return [...terms];
 }
 function matches(item, terms){
@@ -233,7 +241,7 @@ function merchantFor(q){
     if(key){ const g=MCC_GROUPS[key]; return {name:"MCC "+nq, key, ...g, mcc:nq, byCode:true}; } return null; }
   let best=null;
   // обычные слова («кофе», «такси») ищем как категорию, а не как начало названия сети
-  const generic = expand(q).length>1;
+  const generic = inSynGroup(q);
   for(const [names,key] of MERCHANTS) for(const n of names){ const nn=norm(n).replace(/[«»"']/g,"");
     let sc = nq===nn ? 3 : generic ? 0 : (nq.length>=4 && nn.startsWith(nq)) ? 2 : (nq.length>=4 && nn.length>=4 && nq.startsWith(nn)) ? 1 : 0;
     if(sc && (!best || sc>best.sc)) best={sc, name:names[0], key}; }
