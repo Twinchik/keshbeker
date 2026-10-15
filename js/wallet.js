@@ -4,7 +4,25 @@
 /* ---------- render ---------- */
 const PHOTO_SHEEN="linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.12) 38%,rgba(0,0,0,.12) 62%,rgba(0,0,0,.6))";
 // у карты с фото фон — само фото, поверх лёгкое затемнение, чтобы читались проценты
-function cardVars(c){ return c.photo ? `--c-bg:url(${c.photo});--c-ink:#fff;--c-sheen:${PHOTO_SHEEN}`
+// Фото карты хранится строкой data:… на сотни килобайт. Если вставлять её в CSS-переменную,
+// браузер разбирает её заново при каждом пересчёте стилей, и анимация карт подвисает.
+// Поэтому один раз превращаем фото в короткую blob:-ссылку и подставляем уже её.
+const photoUrls=new Map();
+function photoUrl(src){
+  if(!/^data:/.test(src||"")) return src;
+  let u=photoUrls.get(src);
+  if(!u){
+    try{
+      const i=src.indexOf(","), meta=src.slice(5,i);
+      const raw=/;base64/.test(meta) ? atob(src.slice(i+1)) : decodeURIComponent(src.slice(i+1));
+      const bytes=new Uint8Array(raw.length); for(let k=0;k<raw.length;k++) bytes[k]=raw.charCodeAt(k);
+      u=URL.createObjectURL(new Blob([bytes],{type:meta.split(";")[0]||"image/jpeg"}));
+    }catch{ u=src; }
+    photoUrls.set(src,u);
+  }
+  return u;
+}
+function cardVars(c){ return c.photo ? `--c-bg:url(${photoUrl(c.photo)});--c-ink:#fff;--c-sheen:${PHOTO_SHEEN}`
   : c.custom ? `--c-bg:${c.custom.bg};--c-ink:${c.custom.ink};--c-sheen:radial-gradient(90% 120% at 110% -10%,rgba(255,255,255,.18),transparent 60%)`
   : styleVars(c.style); }
 function styleVars(st){ const s=STYLES[st]||STYLES.graphite; return `--c-bg:${s.bg};--c-ink:${s.ink};--c-sheen:${s.sheen||"radial-gradient(90% 120% at 110% -10%,rgba(255,255,255,.18),transparent 60%)"}`; }
@@ -120,9 +138,13 @@ function render(){
     let el = wallet.querySelector(`[data-card="${c.id}"]`);
     if(!el){ el=document.createElement("div"); el.className="card"; el.dataset.card=c.id; el.tabIndex=0; el.setAttribute("role","button"); wallet.appendChild(el); el.style.transform=`translateY(${wallet.offsetHeight||0}px)`; }
     el.classList.toggle("photo", !!c.photo);
-    el.setAttribute("style", cardVars(c) + (el.style.transform?`;transform:${el.style.transform}`:""));
+    // перерисовываем карту, только если она правда изменилась: иначе во время анимации
+    // браузер заново разбирает фото всех карт, и карта «подвисает», а потом прыгает
+    const vars = cardVars(c);
+    if(el._vars!==vars){ el._vars=vars; el.setAttribute("style", vars + (el.style.transform?`;transform:${el.style.transform}`:"")); }
     el.setAttribute("aria-label", `${c.bank}. ${selected===c.id?"Убрать обратно":"Достать карту"}`);
-    el.innerHTML = cardHTML(c, rk, c.id===bestId);
+    const html = cardHTML(c, rk, c.id===bestId);
+    if(el._html!==html){ el._html=html; el.innerHTML = html; }
     el.classList.toggle("best", c.id===bestId && !selected);
     const rr = rk && rk.list.find(x=>x.card.id===c.id);
     el.classList.toggle("dim", !!(rk && rr && rr.base && bestId));
@@ -138,7 +160,8 @@ function layout(stack=currentStack, animateId=null){
   currentStack=stack;
   const wallet=$("#wallet"); const W=wallet.clientWidth; if(!W) return;
   const H=W/1.586, peek=Math.round(Math.min(64,Math.max(48,W*.135))); lastPeek=peek;
-  wallet.style.setProperty("--peek",peek+"px");
+  // меняем переменную, только если она другая: её смена заставляет браузер пересчитать стили всех карт (с фото это долго)
+  if(wallet.style.getPropertyValue("--peek")!==peek+"px") wallet.style.setProperty("--peek",peek+"px");
   const pos={};
   if(!selected){
     stack.forEach((c,i)=>pos[c.id]={y:i*peek,s:1,z:i+1});
