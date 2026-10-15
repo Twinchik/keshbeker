@@ -156,7 +156,10 @@ function render(){
 }
 
 let currentStack=[];
-function layout(stack=currentStack, animateId=null){
+// Пока карты едут обратно в стопку, не снимаем обрезку кошелька: на айфоне снятие
+// clip-path в момент старта пересобирает слои, и анимация сначала стоит, а потом прыгает.
+let clipHoldUntil=0;
+function layout(stack=currentStack, animateId=null, back=false){
   currentStack=stack;
   const wallet=$("#wallet"); const W=wallet.clientWidth; if(!W) return;
   const H=W/1.586, peek=Math.round(Math.min(64,Math.max(48,W*.135))); lastPeek=peek;
@@ -173,7 +176,15 @@ function layout(stack=currentStack, animateId=null){
     rest.forEach((c,j)=>pos[c.id]={y:H+gap+j*step, s:.94, z:j+1});
     wallet.style.height=(rest.length? H+gap+(rest.length-1)*step+peek*.9 : H)+"px";
   }
-  wallet.style.clipPath = selected ? "inset(-400px -80px 0 -80px)" : "none";
+  const BACK_MS=550;
+  if(back && !reduce) clipHoldUntil=performance.now()+BACK_MS;
+  const holdClip = !selected && performance.now()<clipHoldUntil;
+  if(!holdClip) wallet.style.clipPath = selected ? "inset(-400px -80px 0 -80px)" : "none";
+  else setTimeout(()=>{ if(!selected && performance.now()>=clipHoldUntil) wallet.style.clipPath="none"; }, clipHoldUntil-performance.now()+20);
+  // возврат в стопку: двигаем карты так же, как при доставании (через animate), а не CSS-переходом —
+  // на айфоне переход стартовал с задержкой, и карта «подвисала», а потом резко возвращалась
+  const from={};
+  if(back && !reduce) wallet.querySelectorAll("[data-card]").forEach(el=>{ from[el.dataset.card]=getComputedStyle(el).transform; });
   wallet.querySelectorAll("[data-card]").forEach(el=>{
     const p=pos[el.dataset.card]; if(!p) return;
     const to=`translateY(${p.y}px) scale(${p.s})`;
@@ -182,6 +193,11 @@ function layout(stack=currentStack, animateId=null){
       const lift=`translateY(${Math.max(-40, (parseFloat(from.split(",")[5])||0)-70)}px) translateX(8%) rotate(-3deg) scale(1.04)`;
       el.style.transition="none"; el.style.zIndex=p.z; el.style.transform=to;
       el.animate([{transform:from==="none"?"none":from},{transform:lift,offset:.42},{transform:to}],{duration:720,easing:"cubic-bezier(.2,.75,.2,1)"}).onfinish=()=>{el.style.transition="";};
+    } else if(back && !reduce && from[el.dataset.card]){
+      const f=from[el.dataset.card];
+      el.getAnimations().forEach(a=>a.cancel());
+      el.style.transition="none"; el.style.zIndex=p.z; el.style.transform=to;
+      el.animate([{transform:f==="none"?"none":f},{transform:to}],{duration:BACK_MS,easing:"cubic-bezier(.2,.8,.2,1)"}).onfinish=()=>{el.style.transition="";};
     } else {
       el.style.zIndex=p.z; el.style.transform=to;
     }
@@ -296,7 +312,7 @@ function toggleCard(id){
   const prev=selected;
   selected = selected===id ? null : id;
   document.querySelectorAll("[data-card]").forEach(el=>el.classList.toggle("best", false));
-  layout(currentStack, selected?id:null);
+  layout(currentStack, selected?id:null, !selected && !!prev);
   if(!selected && prev) render(); else renderDetail();
   if(selected) $("#wallet").scrollIntoView({behavior:reduce?"auto":"smooth",block:"nearest"});
 }
