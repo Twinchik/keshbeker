@@ -66,13 +66,58 @@ function shopGroups(){
   const top=g=>Math.max(g.own&&g.own.p!=null?g.own.p:-1, ...g.offers.map(o=>o.p), -1);
   return list.sort((a,b)=>top(b)-top(a) || a.n.localeCompare(b.n,"ru"));
 }
+/* ---------- поиск продукта: где выгоднее купить ---------- */
+const today=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const dealActive=x=>!x.until || x.until>=today();
+const fmtDay=u=>{ if(!u) return ""; const [y,m,d]=u.split("-").map(Number); return `${d} ${GEN[m-1]}`; };
+// лучшая банковская карта для покупки в этом магазине (категория по MCC + предложения банка в магазине)
+function bestBankFor(shopName){
+  let terms=expand(shopName); const mer=merchantFor(shopName);
+  if(mer) terms=[...terms, ...mer.terms.filter(t=>!t.startsWith("~")).filter(t=>!terms.includes(t))];
+  let best=null;
+  for(const c of cards){ const r=rankCard(c,terms); if(!best || r.p>best.p) best={card:c, ...r}; }
+  return best;
+}
+function productHits(q){
+  const nq=norm(q); if(nq.length<2) return [];
+  const has=x=>{ const n=norm(x.n); return n.includes(nq) || nq.split(/\s+/).every(w=>w.length>=3 && n.includes(w.slice(0,Math.max(3,w.length-2)))); };
+  const res=[];
+  for(const sh of looseDoc().shops||[]){
+    const deals=(sh.deals||[]).filter(x=>dealActive(x) && has(x)).sort((a,b)=>b.d-a.d);
+    const f=sh.fav && sh.fav.month===nowMonth() ? sh.fav : null;
+    const favs=f ? [...(f.goods||[]).map(x=>({...x,kind:"товар"})), ...(f.cats||[]).map(x=>({...x,kind:"категория"}))].filter(x=>has(x) && x.p!=null).sort((a,b)=>b.p-a.p) : [];
+    if(!deals.length && !favs.length) continue;
+    const d=deals[0]?.d||0;
+    const b=favs.length ? favs[0].p : (sh.p||0);           // любимый товар/категория важнее общих бонусов карты магазина
+    const bank=bestBankFor(sh.n); const c=bank?bank.p:0;
+    // скидка, бонусы и кешбек начисляются друг за другом, поэтому складываем не напрямую
+    const total=100*(1-(1-d/100)*(1-b/100)*(1-c/100));
+    res.push({sh, deal:deals[0]||null, fav:favs[0]||null, d, b, bank, c, total});
+  }
+  return res.sort((a,b)=>b.total-a.total);
+}
+function productHTML(q){
+  const hits=productHits(q); if(!hits.length) return "";
+  return `<li class="pres-h">Где выгоднее: «${esc(q.trim())}»</li>`+hits.map((h,i)=>{
+    const what=[h.deal?`${esc(h.deal.n)}${h.deal.until?` · до ${esc(fmtDay(h.deal.until))}`:""}`:"", h.fav?(h.deal&&norm(h.deal.n)===norm(h.fav.n)?`любимый товар`:`${esc(h.fav.n)} (любимый ${h.fav.kind==="товар"?"товар":"раздел"})`):""].filter(Boolean).join(" · ");
+    const parts=[h.d?`<span class="part sale">Скидка ${fmtP(h.d)}</span>`:"",
+      h.b?`<span class="part">${esc(h.sh.prog||"Карта магазина")} ${fmtP(h.b)}</span>`:"",
+      h.bank&&h.c?`<span class="part"><i style="${cardVars(h.bank.card)}"></i>${esc(h.bank.card.bank)} ${fmtP(h.c)}${h.bank.base?" · на всё":""}</span>`:""].join("");
+    return `<li class="pres${i===0?" first":""}"><div class="pr-h"><strong>${esc(h.sh.n)}</strong><span class="pr-total">≈ ${fmtP(h.total)}</span></div>
+      <div class="pr-what">${what}</div><div class="pr-parts">${parts}</div></li>`; }).join("");
+}
 function renderShops(){
-  const q=norm($("#shopQ").value);
+  const raw=$("#shopQ").value, q=norm(raw);
   const all=shopGroups(); const list=all.filter(g=>!q||norm(g.n).includes(q));
   const box=$("#shopList");
+  const prod=q?productHTML(raw):"";
+  if(q && prod){ box.innerHTML=prod+(list.length?`<li class="pres-h">Магазины</li>`:"")+list.map(shopItemHTML).join(""); return; }
+  if(q && !list.length){ box.innerHTML=`<li class="empty-s">Не нашёл «${esc(raw.trim())}» ни в акциях, ни в любимых товарах. Открой магазин и добавь акцию — например «${esc(raw.trim())} — 30%». <button type="button" class="btn" data-newshop="" style="margin-top:10px">+ Магазин</button></li>`; return; }
   if(!all.length){ box.innerHTML=`<li class="empty-s">Добавь магазины, где у тебя есть их карта: например «Пятёрочка — Х5 Клуб». Нажми «+ Магазин».</li>`; return; }
   if(!list.length){ box.innerHTML=`<li class="empty-s">«${esc($("#shopQ").value)}» не найден. <button type="button" class="btn" data-newshop="${esc($("#shopQ").value)}" style="margin-top:10px">Добавить магазин</button></li>`; return; }
-  box.innerHTML=list.map(g=>{
+  box.innerHTML=list.map(shopItemHTML).join("");
+}
+function shopItemHTML(g){
     const o=g.own;
     const own = o ? (o.prog
         ? `<button type="button" class="lcard" data-edit-shop="${esc(g.n)}" style="--c-bg:${shopGradient(g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">${esc(o.prog)}</span><span class="lc-p">${o.p!=null?fmtP(o.p):"карта"}</span></button>`
@@ -86,8 +131,9 @@ function renderShops(){
       favs=`<div class="favs"><button type="button" class="fav-h" data-edit-shop="${esc(g.n)}">${stale?`<span class="stale-t">Любимое за ${esc(monthOnly(o.fav.month))} — обнови</span>`:`Любимое в ${esc(monthPrep(o.fav.month))}`}</button>
         <div class="fchips">${(o.fav.cats||[]).map(x=>chip(x,"категория")).join("")}${(o.fav.goods||[]).map(x=>chip(x,"товар")).join("")}</div></div>`;
     } else if(o){ favs=`<button type="button" class="offer add" data-edit-shop="${esc(g.n)}">+ любимые категории и товары</button>`; }
-    return `<li class="shop"><div class="shop-h"><strong>${esc(g.n)}</strong></div>${own}${favs}${offers}</li>`;
-  }).join("");
+    const act=(o&&o.deals||[]).filter(dealActive);
+    const dealsHTML = act.length ? `<div class="favs"><button type="button" class="fav-h" data-edit-shop="${esc(g.n)}">Акции</button><div class="fchips">${act.map(x=>`<span class="fchip sale">${esc(x.n)} <b>−${fmtP(x.d)}</b>${x.until?` <small>до ${esc(fmtDay(x.until))}</small>`:""}</span>`).join("")}</div></div>` : "";
+    return `<li class="shop"><div class="shop-h"><strong>${esc(g.n)}</strong></div>${own}${favs}${dealsHTML}${offers}</li>`;
 }
 $("#shopQ").addEventListener("input",renderShops);
 $("#shopList").addEventListener("click",e=>{
@@ -117,6 +163,10 @@ function openShop(name="", isNew){
       <span class="sublab">Любимые товары</span><div class="favrows" id="shGoods"></div>
       <button type="button" class="btn ghost addrow" data-add="goods">+ Товар</button>
       <p class="note warn" id="shFavStale" hidden></p></div>
+    <div class="fl" id="shDealBox"><span class="lab">Акции и скидки</span>
+      <p class="note" style="margin:0">Скидка на конкретный товар, например «Шоколад Alpen Gold — 30% до 15 ноября». Дату можно не ставить.</p>
+      <div class="favrows" id="shDeals"></div>
+      <button type="button" class="btn ghost addrow" id="shAddDeal">+ Акция</button></div>
     <div class="acts"><div>${isNew?"":`<button type="button" class="btn danger" id="shDel">Удалить</button>`}</div>
       <div><button type="button" class="btn ghost" id="shCancel">Отмена</button><button type="submit" class="btn primary">Сохранить</button></div></div>
   </form>`;
@@ -158,6 +208,13 @@ function openShop(name="", isNew){
     const a=e.target.closest("[data-add]"); if(a){ syncFav(); fav[a.dataset.add].push({n:"",p:""}); drawFav(); const rows=(a.dataset.add==="cats"?$("#shCats"):$("#shGoods")).querySelectorAll("[data-f=n]"); rows[rows.length-1]?.focus(); return; }
     const rm=e.target.closest("[data-rm]"); if(rm){ syncFav(); const r=rm.closest(".erow"); fav[r.dataset.k].splice(+r.dataset.i,1); drawFav(); } });
   drawFav();
+  // акции на товары: {n — товар, d — скидка %, until — до какого дня (ГГГГ-ММ-ДД)}
+  const deals=((cur&&cur.deals)||[]).map(x=>({...x}));
+  const drawDeals=()=>{ $("#shDeals").innerHTML=deals.map((x,i)=>`<div class="erow deal" data-i="${i}"><input class="in" data-f="n" placeholder="Например, Шоколад Alpen Gold" value="${esc(x.n||"")}" aria-label="Товар"><input class="in" data-f="d" inputmode="decimal" placeholder="−%" value="${x.d!=null&&x.d!==""?esc(String(x.d).replace(".",",")):""}" aria-label="Скидка, %"><input class="in" data-f="u" type="date" value="${esc(x.until||"")}" aria-label="До какого дня"><button type="button" class="x" data-rmdeal aria-label="Удалить">×</button></div>`).join(""); };
+  const syncDeals=()=>{ document.querySelectorAll("#shDeals .erow").forEach(r=>{ const it=deals[+r.dataset.i]; if(!it) return; it.n=r.querySelector("[data-f=n]").value; it.d=r.querySelector("[data-f=d]").value; it.until=r.querySelector("[data-f=u]").value; }); };
+  $("#shAddDeal").onclick=()=>{ syncDeals(); deals.push({n:"",d:"",until:""}); drawDeals(); const r=$("#shDeals").querySelectorAll("[data-f=n]"); r[r.length-1]?.focus(); };
+  $("#shDeals").addEventListener("click",e=>{ const b=e.target.closest("[data-rmdeal]"); if(!b) return; syncDeals(); deals.splice(+b.closest(".erow").dataset.i,1); drawDeals(); });
+  drawDeals();
   nameEl.value=cur?cur.n:(name||""); progEl.value=cur?(cur.prog||""):""; noneEl.checked=!!cur && !cur.prog; $("#shP").value=cur&&cur.p!=null?String(cur.p).replace(".",","):"";
   if(!cur) autofill(); else drawPrev();
   nameEl.addEventListener("input",autofill);
@@ -180,7 +237,10 @@ function openShop(name="", isNew){
     const clean=a=>a.filter(x=>String(x.n||"").trim()).map(x=>({n:String(x.n).trim(), p: String(x.p||"").trim()?cleanP(x.p):null}));
     const fv={month:nm, cats:clean(fav.cats), goods:clean(fav.goods)};
     const entry={n, prog: noneEl.checked ? "" : (progEl.value.trim()||`Карта ${n}`), p: pv ? cleanP(pv) : null,
-      fav: (fv.cats.length||fv.goods.length) ? fv : (oldFav && oldFav.month!==nm ? oldFav : null)};
+      fav: (fv.cats.length||fv.goods.length) ? fv : (oldFav && oldFav.month!==nm ? oldFav : null),
+      // акции: пустые строки отбрасываем, давно закончившиеся (больше 30 дней назад) — тоже
+      deals: (syncDeals(), deals.filter(x=>String(x.n||"").trim() && String(x.d||"").trim()).map(x=>({n:String(x.n).trim(), d:cleanP(x.d), until:x.until||""}))
+        .filter(x=>!x.until || (Date.now()-new Date(x.until+"T23:59:59"))/864e5 < 30))};
     close();
     await save([...others().filter(x=>norm(x.n)!==norm(n)), entry]);
   };
