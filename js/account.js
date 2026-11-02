@@ -50,8 +50,7 @@ $("#acctBtn").addEventListener("click",()=>{
   s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Аккаунт">
     <div class="acct"><label class="avatar big av-edit" id="bigAv" for="avFile" title="Сменить фото"></label><input class="vh" id="avFile" type="file" accept="image/*"><span class="av-acts"><label class="linkbtn" for="avFile">Сменить фото</label><button type="button" class="linkbtn" id="avDel" hidden>Убрать</button></span><strong id="acctName"></strong><span id="acctSub"></span></div>
     <p class="sync${account.synced?"":" off"}">${account.synced?`Синхронизировано · ${cards.length} ${plural(cards.length,["карта","карты","карт"])}`:"Карты хранятся только в этом браузере"}</p>
-    <p class="note">${account.synced?"Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.":"Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, можно перенести через «Сохранить в файл» и «Загрузить из файла»."}</p>
-    <div class="acts"><div><button type="button" class="btn" id="exportBtn">Сохранить в файл</button><label class="btn" for="importFile">Загрузить из файла<input class="vh" id="importFile" type="file" accept="application/json,.json"></label></div></div>
+    <p class="note">${account.synced?"Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.":"Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, перенесутся в аккаунт сами."}</p>
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
   document.body.appendChild(s);
@@ -60,9 +59,7 @@ $("#acctBtn").addEventListener("click",()=>{
   fillAvatar($("#bigAv")); wireAvatar(s);
   s.addEventListener("click",e=>{ if(e.target===s||e.target.id==="acctClose") s.remove();
     if(e.target.id==="signOut"){ s.remove(); signOut(); }
-    if(e.target.id==="toLogin"){ s.remove(); loginFromGuest(); }
-    if(e.target.id==="exportBtn") exportCards(); });
-  $("#importFile").onchange=async e=>{ const f=e.target.files&&e.target.files[0]; if(!f) return; s.remove(); await importCards(f); };
+    if(e.target.id==="toLogin"){ s.remove(); loginFromGuest(); } });
   s.addEventListener("keydown",e=>{ if(e.key==="Escape") s.remove(); });
 });
 const plural=(n,f)=>f[(n%10===1&&n%100!==11)?0:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?1:2];
@@ -207,27 +204,6 @@ $("#resetForm").addEventListener("submit",async e=>{
   const m=$("#resetMsg"); m.textContent=error?ruErr(error):"Пароль изменён"; m.className="auth-msg "+(error?"err":"ok");
   if(!error){ $("#resetForm").hidden=true; $("#authForm").hidden=false; $("#guestBtn").hidden=false; if(session) startSynced(); }
 });
-
-/* ---------- файл с картами ---------- */
-function exportCards(){
-  const blob=new Blob([JSON.stringify({app:"keshbeker",version:1,exportedAt:new Date().toISOString(),cards:allCards},null,1)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="keshbeker-cards.json";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
-}
-async function importCards(file){
-  try{
-    const j=JSON.parse(await file.text()); const list=Array.isArray(j)?j:j.cards;
-    if(!Array.isArray(list)) throw new Error("bad");
-    let n=0;
-    for(const raw of list){
-      if(!raw||!raw.id) continue;
-      const c={...raw}; putCard(c); await store?.save(c);
-      if(!String(c.id).startsWith("_") && !c.deletedAt) n++;
-    }
-    render(); toast("Загружено карт: "+n);
-  }catch{ toast("Не получилось прочитать файл"); }
-}
 
 setAuthMode("in");
 const cfgBad = !CFG.url || !CFG.key || /ВСТАВЬ/.test(CFG.url+CFG.key) || /\/rest\/v1/.test(CFG.url);
