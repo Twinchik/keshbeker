@@ -182,6 +182,12 @@ function ruErr(e){
   return "Не получилось: "+m;
 }
 $("#authTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-mode]"); if(b) setAuthMode(b.dataset.mode); });
+// Есть ли такая почта среди аккаунтов. Нужна функция email_registered в базе (sql/email-registered.sql).
+// Если функции нет или нет связи — возвращаем null, и сайт ведёт себя как раньше.
+async function emailRegistered(email){
+  try{ const {data,error}=await sb.rpc("email_registered",{e:email}); return error ? null : !!data; }catch{ return null; }
+}
+const NOT_REGISTERED="Эта почта не зарегистрирована. Открой вкладку «Регистрация».";
 $("#authForm").addEventListener("submit",async e=>{
   e.preventDefault();
   if(!sb) return authMsg("Сайт ещё не подключён к базе. Заполни config.js.","err");
@@ -198,13 +204,17 @@ $("#authForm").addEventListener("submit",async e=>{
       if(error) throw error;
       authMsg("");
     }
-  }catch(err){ authMsg(ruErr(err),"err"); }
+  }catch(err){
+    const reg = authMode==="in" && err?.message==="Invalid login credentials" ? await emailRegistered(email) : null;
+    authMsg(reg===false ? NOT_REGISTERED : reg===true ? "Неверный пароль. Если забыл его — нажми «Забыл пароль»." : ruErr(err),"err");
+  }
   btn.disabled=false;
 });
 $("#forgotBtn").addEventListener("click",async()=>{
   const email=$("#authEmail").value.trim();
   if(!email) return authMsg("Впиши почту, и я пришлю ссылку для смены пароля.","err");
   if(!sb) return;
+  if(await emailRegistered(email)===false) return authMsg(NOT_REGISTERED,"err");
   const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
   authMsg(error?ruErr(error):"Письмо со ссылкой для смены пароля отправлено на "+email+".", error?"err":"ok");
 });

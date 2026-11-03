@@ -17,6 +17,7 @@ js/shops.js           вкладка «Магазины» и карты лоял
 js/editor.js          редактор карты, корзина, уведомления
 js/theme.js           светлая и тёмная тема, переключатель
 js/account.js         вход, синхронизация с Supabase, запуск приложения
+sql/                  SQL для Supabase (выполнить в SQL Editor)
 .github/workflows/    ежедневный пинг, чтобы бесплатный Supabase не засыпал
 ```
 
