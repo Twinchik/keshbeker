@@ -111,6 +111,9 @@ body:has(#viewTabs:not([hidden])){padding-bottom:calc(88px + env(safe-area-inset
 .offer i.none{background:transparent;border:1.5px dashed var(--muted)}
 .offer.add{padding:4px 12px;color:var(--muted);border-style:dashed;background:transparent}
 .shops .empty-s{text-align:center;color:var(--muted);padding:28px 12px;border:2px dashed var(--line);border-radius:16px}
+.shops .empty-add{display:block;width:100%;background:transparent;font:inherit;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
+.shops .empty-add:hover,.shops .empty-add:focus-visible{border-color:var(--accent);color:var(--ink)}
+.shops .empty-add:active{background:var(--surface-2)}
 .auth{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px}
 .auth .in{font-size:16px;padding:12px 13px}
 .auth .btn{justify-content:center}

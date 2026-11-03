@@ -113,7 +113,7 @@ function renderShops(){
   const prod=q?productHTML(raw):"";
   if(q && prod){ box.innerHTML=prod+(list.length?`<li class="pres-h">Магазины</li>`:"")+list.map(shopItemHTML).join(""); return; }
   if(q && !list.length){ box.innerHTML=`<li class="empty-s">Не нашёл «${esc(raw.trim())}» ни в акциях, ни в любимых товарах. Открой магазин и добавь акцию — например «${esc(raw.trim())} — 30%». <button type="button" class="btn" data-newshop="" style="margin-top:10px">+ Магазин</button></li>`; return; }
-  if(!all.length){ box.innerHTML=`<li class="empty-s">Добавь магазины, где у тебя есть их карта: например «Пятёрочка — Х5 Клуб». Нажми «+ Магазин».</li>`; return; }
+  if(!all.length){ box.innerHTML=`<li><button type="button" class="empty-s empty-add" data-newshop="">Добавь первый магазин, где у тебя есть их карта: например «Пятёрочка — Х5 Клуб»</button></li>`; return; }
   if(!list.length){ box.innerHTML=`<li class="empty-s">«${esc($("#shopQ").value)}» не найден. <button type="button" class="btn" data-newshop="${esc($("#shopQ").value)}" style="margin-top:10px">Добавить магазин</button></li>`; return; }
   box.innerHTML=list.map(shopItemHTML).join("");
 }
