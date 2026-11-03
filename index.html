@@ -12,6 +12,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Кешбекер">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>try{var t=localStorage.getItem("keshbeker-theme");if(t==="dark"||t==="light")document.documentElement.dataset.theme=t;}catch(e){}</script>
 <meta name="theme-color" content="#e8ebf0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +30,7 @@
 <div class="app">
   <header class="top">
     <div class="brand"><h1>Кешбекер</h1><span id="monthLbl"></span></div>
-    <div class="hdr-r"><button class="btn primary" id="addBtn" type="button"><span aria-hidden="true">+</span> Карта</button><button class="avatar" id="acctBtn" type="button" aria-label="Аккаунт" hidden></button></div>
+    <div class="hdr-r"><button class="btn primary" id="addBtn" type="button"><span aria-hidden="true">+</span> Карта</button><button class="avatar" id="acctBtn" type="button" aria-label="Аккаунт" hidden></button><span id="gateTheme" hidden><button type="button" class="tswitch" role="switch" aria-checked="false" data-theme-toggle><span class="ts-lbl">Тёмная тема</span><span class="ts-track" aria-hidden="true"><span class="ts-knob"></span></span></button></span></div>
   </header>
 
   <section class="gate" id="gate" hidden>
@@ -100,6 +101,7 @@
 <script src="js/photo.js"></script>
 <script src="js/shops.js"></script>
 <script src="js/editor.js"></script>
+<script src="js/theme.js"></script>
 <script src="js/account.js"></script>
 
 </body>

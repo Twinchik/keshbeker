@@ -11,7 +11,7 @@ function hideSplash(){
   setTimeout(()=>{ const el=document.getElementById("splash"); if(!el) return; el.classList.add("out"); setTimeout(()=>el.remove(),400); },wait);
 }
 setTimeout(hideSplash,8000);   // на всякий случай, если сеть совсем не отвечает
-function showGate(on){ if(on) hideSplash(); $("#gate").hidden=!on; $("#main").style.display=on?"none":"contents"; $("#addBtn").hidden=on; $("#acctBtn").hidden=on; }
+function showGate(on){ if(on) hideSplash(); $("#gate").hidden=!on; $("#main").style.display=on?"none":"contents"; $("#addBtn").hidden=on; $("#acctBtn").hidden=on; $("#gateTheme").hidden=!on; }
 $("#guestBtn").addEventListener("click",()=>{ if(lsGet(GUEST)!=="1") setAll([]); startGuest(); });
 function drawAvatar(){ const b=$("#acctBtn"); b.hidden=false; fillAvatar(b); }
 // своя аватарка хранится отдельной записью "_profile" рядом с картами
@@ -50,6 +50,7 @@ $("#acctBtn").addEventListener("click",()=>{
   s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Аккаунт">
     <div class="acct"><label class="avatar big av-edit" id="bigAv" for="avFile" title="Сменить фото"></label><input class="vh" id="avFile" type="file" accept="image/*"><span class="av-acts"><label class="linkbtn" for="avFile">Сменить фото</label><button type="button" class="linkbtn" id="avDel" hidden>Убрать</button></span><strong id="acctName"></strong><span id="acctSub"></span></div>
     <p class="sync${account.synced?"":" off"}">${account.synced?`Синхронизировано · ${cards.length} ${plural(cards.length,["карта","карты","карт"])}`:"Карты хранятся только в этом браузере"}</p>
+    <div class="acct-theme">${themeSwitchHTML("wide")}</div>
     <p class="note">${account.synced?"Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.":"Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, перенесутся в аккаунт сами."}</p>
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
