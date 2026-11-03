@@ -60,16 +60,32 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .acct strong{font-size:18px}
 .acct span{color:var(--muted);font-size:13px}
 /* переключатель темы */
-.tswitch{display:inline-flex;align-items:center;gap:10px;background:none;border:0;padding:6px 2px;font:inherit;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.tswitch.wide{width:100%;justify-content:space-between;padding:10px 2px}
-.ts-lbl{font-size:14px;font-weight:500}
-.ts-track{position:relative;width:46px;height:28px;border-radius:999px;background:var(--line);transition:background .2s;flex:none}
-.ts-knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
-.tswitch[aria-checked="true"] .ts-track{background:var(--accent)}
-.tswitch[aria-checked="true"] .ts-knob{transform:translateX(18px)}
-.tswitch:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
-.acct-theme{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-@media (prefers-reduced-motion:reduce){.ts-track,.ts-knob{transition:none}}
+.tswitch{--ts-w:72px;--ts-h:32px;--ts-k:24px;position:relative;display:block;width:var(--ts-w);height:var(--ts-h);padding:0;border-radius:999px;border:2px solid #1b1d22;overflow:hidden;cursor:pointer;flex:none;background:none;isolation:isolate;-webkit-tap-highlight-color:transparent;box-shadow:inset 0 2px 4px rgba(0,0,0,.35),0 0 0 1px var(--line)}
+.tswitch:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.ts-sky{position:absolute;inset:0;background:linear-gradient(180deg,#2f86e6,#2466c2);transition:background .6s ease}
+.tswitch[aria-checked="true"] .ts-sky{background:linear-gradient(180deg,#121419,#1b1e25)}
+/* солнце/луна: днём справа, ночью слева; вокруг — три полупрозрачных круга-ореола */
+.ts-knob{position:absolute;z-index:3;top:calc((var(--ts-h) - 4px - var(--ts-k))/2);left:calc(var(--ts-w) - 4px - var(--ts-k) - 3px);width:var(--ts-k);height:var(--ts-k);border-radius:50%;
+  background:#ffc72a;box-shadow:0 0 0 7px rgba(255,255,255,.1),0 0 0 14px rgba(255,255,255,.07),0 0 0 21px rgba(255,255,255,.05),inset -2px -2px 3px rgba(0,0,0,.12);
+  transition:left .6s cubic-bezier(.65,0,.35,1),background .6s ease}
+.tswitch[aria-checked="true"] .ts-knob{left:3px;background:#c7cbd1}
+.ts-moon{position:absolute;inset:0;border-radius:50%;opacity:0;transition:opacity .4s ease .2s;
+  background:radial-gradient(circle at 30% 34%,#9ea3ab 0 13%,transparent 14%),radial-gradient(circle at 62% 64%,#a7acb3 0 9%,transparent 10%),radial-gradient(circle at 46% 74%,#a7acb3 0 6%,transparent 7%),radial-gradient(circle at 70% 36%,#adb2b9 0 5%,transparent 6%)}
+.tswitch[aria-checked="true"] .ts-moon{opacity:1}
+.ts-clouds{position:absolute;z-index:2;left:0;bottom:-1px;width:100%;height:70%;transition:transform .6s cubic-bezier(.65,0,.35,1),opacity .4s}
+.ts-clouds.night{transform:translateY(110%)}
+.tswitch[aria-checked="true"] .ts-clouds.day{transform:translateY(110%)}
+.tswitch[aria-checked="true"] .ts-clouds.night{transform:none}
+.ts-stars{position:absolute;z-index:1;inset:0;opacity:0;transform:translateY(-8px);transition:opacity .5s ease .15s,transform .6s ease}
+.tswitch[aria-checked="true"] .ts-stars{opacity:1;transform:none}
+.ts-stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff}
+.ts-stars i:nth-child(1){left:52%;top:22%;width:3px;height:3px}
+.ts-stars i:nth-child(2){left:66%;top:40%}
+.ts-stars i:nth-child(3){left:80%;top:18%}
+.ts-stars i:nth-child(4){left:40%;top:48%;opacity:.7}
+.ts-stars i:nth-child(5){left:88%;top:46%;opacity:.7}
+.acct-theme{display:flex;justify-content:center;padding:6px 0 2px}
+@media (prefers-reduced-motion:reduce){.ts-sky,.ts-knob,.ts-moon,.ts-clouds,.ts-stars{transition:none}}
 .sync{display:flex;align-items:center;gap:8px;justify-content:center;font-size:14px}
 .sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
 .sync.off::before{background:var(--warn)}
