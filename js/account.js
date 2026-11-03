@@ -168,7 +168,15 @@ const ERR={
 function ruErr(e){
   const m=e?.message||"";
   if(ERR[m]) return ERR[m];
-  if(/password/i.test(m)) return "Пароль слишком простой: нужно минимум 6 символов.";
+  // Supabase отдаёт код ошибки: по нему точнее, чем по тексту
+  const code=e?.code||"";
+  if(code==="same_password" || /different from the old/i.test(m)) return "Это твой текущий пароль. Придумай новый, другой.";
+  if(code==="weak_password" || /at least \d+ characters|password should/i.test(m)){
+    const n=(m.match(/at least (\d+)/)||[])[1]||6;
+    return `Пароль слишком короткий: нужно минимум ${n} символов.`;
+  }
+  if(code==="reauthentication_needed" || /reauthenticat/i.test(m)) return "Ссылка для смены пароля устарела. Нажми «Забыл пароль» ещё раз.";
+  if(/password/i.test(m)) return "Не получилось сменить пароль: "+m;
   if(/rate limit/i.test(m)) return "Слишком много попыток. Подожди пару минут.";
   if(/fetch|network/i.test(m) || !m) return "Нет связи с сервером. Проверь интернет или включи VPN.";
   return "Не получилось: "+m;
