@@ -143,7 +143,7 @@ async function signOut(){
   lsDel(GUEST); lsDel(LS);
   setAll([]); selected=null; query=""; $("#q").value="";
   account={viewer:null, synced:false};
-  render(); showGate(true); setStatus("");
+  render(); setAuthMode("in"); $("#authPass").value=""; $("#authPass2").value=""; $("#authSubmit").disabled=false; showGate(true); setStatus("");
   try{ await sb?.auth.signOut(); }catch{}
   session=null;
   toast("Ты вышел из Кешбекера");
@@ -188,6 +188,7 @@ $("#authForm").addEventListener("submit",async e=>{
     } else {
       const {error}=await sb.auth.signInWithPassword({email,password:pass});
       if(error) throw error;
+      authMsg("");
     }
   }catch(err){ authMsg(ruErr(err),"err"); }
   btn.disabled=false;
