@@ -154,7 +154,8 @@ body:has(#viewTabs:not([hidden])){padding-bottom:calc(88px + env(safe-area-inset
 .auth{display:flex;flex-direction:column;gap:10px;width:100%;max-width:340px}
 .auth .in{font-size:16px;padding:12px 13px}
 .auth .btn{justify-content:center}
-.auth-msg{font-size:13px;min-height:1em;color:var(--muted)}
+.auth-msg{font-size:13px;min-height:1em;color:var(--muted);text-align:center;text-wrap:balance}
+.gate .auth-msg{max-width:none;align-self:stretch}
 .auth-msg.err{color:#d23c2f}
 .auth-msg.ok{color:var(--good)}
 .avatar{font-weight:700;color:var(--ink)}
