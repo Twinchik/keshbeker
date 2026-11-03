@@ -162,6 +162,8 @@ let clipHoldUntil=0;
 function layout(stack=currentStack, animateId=null, back=false){
   currentStack=stack;
   const wallet=$("#wallet"); const W=wallet.clientWidth; if(!W) return;
+  // карт нет — в кошельке только пунктирная кнопка «Добавь первую карту», высота по ней
+  if(!stack.length){ wallet.style.height="auto"; wallet.style.clipPath="none"; return; }
   const H=W/1.586, peek=Math.round(Math.min(64,Math.max(48,W*.135))); lastPeek=peek;
   // меняем переменную, только если она другая: её смена заставляет браузер пересчитать стили всех карт (с фото это долго)
   if(wallet.style.getPropertyValue("--peek")!==peek+"px") wallet.style.setProperty("--peek",peek+"px");

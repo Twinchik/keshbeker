@@ -136,7 +136,7 @@ function startGuest(){
   account={viewer:null, synced:false}; drawAvatar(); showGate(false);
   store={ save:async()=>writeLS(allCards), remove:async()=>writeLS(allCards) };
   applyRoll(); writeLS(allCards); render();
-  setStatus("Без входа карты хранятся только в этом браузере.");
+  setStatus("Без входа карты хранятся только в этом браузере");
 }
 async function signOut(){
   unsub?.(); unsub=null; store=null;
