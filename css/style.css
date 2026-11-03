@@ -84,7 +84,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .ts-stars i:nth-child(3){left:80%;top:18%}
 .ts-stars i:nth-child(4){left:40%;top:48%;opacity:.7}
 .ts-stars i:nth-child(5){left:88%;top:46%;opacity:.7}
-.acct-theme{display:flex;justify-content:center;padding:6px 0 2px}
+/* в окне аккаунта тумблер в правом верхнем углу, на уровне аватарки */
+.acct-sheet{position:relative}
+.acct-theme{position:absolute;top:18px;right:16px;z-index:2}
 @media (prefers-reduced-motion:reduce){.ts-sky,.ts-knob,.ts-moon,.ts-clouds,.ts-stars{transition:none}}
 .sync{display:flex;align-items:center;gap:8px;justify-content:center;font-size:14px}
 .sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}

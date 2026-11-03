@@ -47,7 +47,7 @@ function wireAvatar(sheet){
 }
 $("#acctBtn").addEventListener("click",()=>{
   const v=account.viewer, s=document.createElement("div"); s.className="scrim"; s.id="scrim";
-  s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Аккаунт">
+  s.innerHTML=`<div class="sheet acct-sheet" role="dialog" aria-modal="true" aria-label="Аккаунт">
     <div class="acct"><label class="avatar big av-edit" id="bigAv" for="avFile" title="Сменить фото"></label><input class="vh" id="avFile" type="file" accept="image/*"><span class="av-acts"><label class="linkbtn" for="avFile">Сменить фото</label><button type="button" class="linkbtn" id="avDel" hidden>Убрать</button></span><strong id="acctName"></strong><span id="acctSub"></span></div>
     <p class="sync${account.synced?"":" off"}">${account.synced?`Синхронизировано · ${cards.length} ${plural(cards.length,["карта","карты","карт"])}`:"Карты хранятся только в этом браузере"}</p>
     <div class="acct-theme">${themeSwitchHTML()}</div>
