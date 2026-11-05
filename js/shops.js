@@ -71,11 +71,19 @@ const today=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMon
 const dealActive=x=>!x.until || x.until>=today();
 const fmtDay=u=>{ if(!u) return ""; const [y,m,d]=u.split("-").map(Number); return `${d} ${GEN[m-1]}`; };
 // лучшая банковская карта для покупки в этом магазине (категория по MCC + предложения банка в магазине)
-function bestBankFor(shopName){
+// Кешбек «… доставка» (например «Дикси доставка 14%») действует только при заказе доставки,
+// поэтому считаем его отдельно от покупки в самом магазине.
+const isDelivery=it=>/доставк|delivery/.test(norm(it.n||""));
+function bestBankFor(shopName, delivery=false){
   let terms=expand(shopName); const mer=merchantFor(shopName);
   if(mer) terms=[...terms, ...mer.terms.filter(t=>!t.startsWith("~")).filter(t=>!terms.includes(t))];
+  const keep=it=>isBase(it.n) || isDelivery(it)===delivery;
   let best=null;
-  for(const c of cards){ const r=rankCard(c,terms); if(!best || r.p>best.p) best={card:c, ...r}; }
+  for(const c of cards){
+    const r=rankCard({...c, items:(c.items||[]).filter(keep), shops:(c.shops||[]).filter(keep)}, terms);
+    if(delivery && (r.base || !r.item)) continue;          // для доставки — только явные «… доставка»
+    if(!best || r.p>best.p) best={card:c, ...r};
+  }
   return best;
 }
 function productHits(q){
@@ -91,8 +99,10 @@ function productHits(q){
     const b=favs.length ? favs[0].p : (sh.p||0);           // любимый товар/категория важнее общих бонусов карты магазина
     const bank=bestBankFor(sh.n); const c=bank?bank.p:0;
     // скидка, бонусы и кешбек начисляются друг за другом, поэтому складываем не напрямую
-    const total=100*(1-(1-d/100)*(1-b/100)*(1-c/100));
-    res.push({sh, deal:deals[0]||null, fav:favs[0]||null, d, b, bank, c, total});
+    const sum=cb=>100*(1-(1-d/100)*(1-b/100)*(1-cb/100));
+    const total=sum(c);
+    const del=bestBankFor(sh.n,true); const dc=del && del.p>c ? del.p : 0;
+    res.push({sh, deal:deals[0]||null, fav:favs[0]||null, d, b, bank, c, total, del:dc?del:null, dc, dtotal:dc?sum(dc):0});
   }
   return res.sort((a,b)=>b.total-a.total);
 }
@@ -103,8 +113,10 @@ function productHTML(q){
     const parts=[h.d?`<span class="part sale">Скидка ${fmtP(h.d)}</span>`:"",
       h.b?`<span class="part">${esc(h.sh.prog||"Карта магазина")} ${fmtP(h.b)}</span>`:"",
       h.bank&&h.c?`<span class="part"><i style="${cardVars(h.bank.card)}"></i>${esc(h.bank.card.bank)} ${fmtP(h.c)}${h.bank.base?" · на всё":""}</span>`:""].join("");
+    // кешбек только за доставку — отдельной строкой, чтобы не путать с покупкой в магазине
+    const deliv = h.del ? `<div class="pr-deliv"><span class="part deliv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/></svg><i style="${cardVars(h.del.card)}"></i>${esc(h.del.card.bank)} ${fmtP(h.dc)} · только доставка</span><span class="pr-dtotal">с доставкой ≈ ${fmtP(h.dtotal)}</span></div>` : "";
     return `<li class="pres${i===0?" first":""}"><div class="pr-h"><strong>${esc(h.sh.n)}</strong><span class="pr-total">≈ ${fmtP(h.total)}</span></div>
-      <div class="pr-what">${what}</div><div class="pr-parts">${parts}</div></li>`; }).join("");
+      <div class="pr-what">${what}</div><div class="pr-parts">${parts}</div>${deliv}</li>`; }).join("");
 }
 function renderShops(){
   const raw=$("#shopQ").value, q=norm(raw);

@@ -262,6 +262,10 @@ button,a,label,.card{touch-action:manipulation}
 .part{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:3px 10px;font-size:12px}
 .part i{width:22px;aspect-ratio:1.586;border-radius:3px;background:var(--c-bg) center/cover}
 .part.sale,.fchip.sale b{color:#d23c2f}
+.pr-deliv{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px;border-top:1px dashed var(--line);padding-top:8px;margin-top:2px}
+.part.deliv{border-style:dashed}
+.part.deliv svg{flex:none;color:var(--muted)}
+.pr-dtotal{font-size:13px;font-weight:600;color:var(--muted)}
 .fchip small{color:var(--muted)}
 .erow.deal{grid-template-columns:1fr 56px 124px 30px}
 @media (max-width:400px){.erow.deal{grid-template-columns:1fr 56px 30px}.erow.deal [data-f=u]{grid-column:1/3}}
