@@ -256,11 +256,9 @@ function merchantSuggestions(q){
     const hit=names.find(n=>norm(n).startsWith(nq) || (nq.length>=3 && norm(n).includes(nq))); if(!hit || seen.has(names[0])) continue; seen.add(names[0]);
     if(names.some(n=>own.has(norm(n)))) continue;
     const g=MCC_GROUPS[key]; let best=null;
-    const prim=g.terms.filter(t=>!t.startsWith("~")), sim=g.terms.filter(t=>t.startsWith("~")).map(t=>t.slice(1));
-    // сначала точная категория (Фастфуд); похожую (Кафе) берём, только если точной нет ни на одной карте,
-    // и тогда показываем именно её название — чтобы не выглядело, будто на карте есть «Фастфуд»
-    for(const [ts,isSim] of [[prim,false],[sim,true]]){ if(best||!ts.length) break;
-      for(const c of cards) for(const it of c.items||[]) if(!isBase(it.n) && matches(it,ts) && (!best||it.p>best.p)) best={p:it.p,bank:c.bank,cat:isSim?it.n:g.label}; }
+    // только точная категория сети (Фастфуд): похожие (Кафе) не подставляем — банк может их не засчитать
+    const prim=g.terms.filter(t=>!t.startsWith("~"));
+    for(const c of cards) for(const it of c.items||[]) if(!isBase(it.n) && matches(it,prim) && (!best||it.p>best.p)) best={p:it.p,bank:c.bank,cat:g.label};
     out.push(best ? {n:names[0], p:best.p, bank:best.bank, kind:"merchant", cat:best.cat} : {n:names[0], p:null, bank:"", kind:"merchant", cat:g.label});
     if(out.length>=4) break;
   }
@@ -271,13 +269,11 @@ function ranking(){
   let terms = expand(query); if(!terms.length) return null;
   // сеть магазинов или MCC-код → добавляем её категорию (Ростикс → Фастфуд)
   const merchant = merchantFor(query);
-  // сначала ищем точную категорию (Фастфуд), и только если её нет ни на одной карте — похожую (Кафе) — «~» в списке
+  // только точная категория сети (Фастфуд); похожие («~» в списке, например Кафе) не подставляем
   const primary = merchant ? merchant.terms.filter(t=>!t.startsWith("~")) : [];
-  const similar = merchant ? merchant.terms.filter(t=>t.startsWith("~")).map(t=>t.slice(1)) : [];
   const rank = ts => { const r = cards.map(c => ({card:c, ...rankCard(c,ts)})); r.sort((a,b)=> (a.base-b.base) || (b.p-a.p)); return r; };
   terms=[...terms, ...primary.filter(t=>!terms.includes(t))];
-  let r = rank(terms), viaSimilar=false;
-  if(similar.length && r.every(x=>x.base)){ terms=[...terms, ...similar]; r=rank(terms); viaSimilar=!r.every(x=>x.base); }
-  // в «следом» не подмешиваем похожие категории, если точная нашлась
+  const r = rank(terms), viaSimilar=false;
+
   return {terms, list:r, merchant, viaSimilar};
 }
