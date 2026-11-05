@@ -57,7 +57,7 @@ function countCurrentSearch(){
 
 function renderChips(){
   const m = new Map();
-  for (const c of [...cards, looseDoc()]) for (const it of [...(c.items||[]),...(c.shops||[])]) { if(isBase(it.n) || it.p==null) continue; const k=norm(it.n); const cur=m.get(k); if(!cur||it.p>cur.p) m.set(k,{n:it.n,p:it.p}); }
+  for (const c of cards) for (const it of [...(c.items||[]),...(c.shops||[])]) { if(isBase(it.n) || it.p==null) continue; const k=norm(it.n); const cur=m.get(k); if(!cur||it.p>cur.p) m.set(k,{n:it.n,p:it.p}); }
   // сначала то, что ищешь чаще всего (свежие поиски весят больше), потом — по проценту
   const list=[...m.values()].map(x=>({...x,pop:searchScore(x.n)})).sort((a,b)=>b.pop-a.pop || b.p-a.p).slice(0,18);
   $("#chips").innerHTML = list.map(x=>`<button type="button" class="chip${norm(x.n)===norm(query)?" on":""}${x.pop>0?" hot":""}" data-q="${esc(x.n)}">${esc(x.n)} <b>${fmtP(x.p)}</b></button>`).join("");
@@ -67,23 +67,10 @@ function renderChips(){
 function renderAnswer(rk){
   const box=$("#answerBox");
   if(!rk){ box.innerHTML=""; return; }
-  // карта самого магазина (Х5 Клуб и т.п.) — подсказываем показать её на кассе
-  const ownShop=(looseDoc().shops||[]).find(sh=>matches(sh,[rk.terms[0]]) || (rk.merchant && norm(sh.n)===norm(rk.merchant.name)));
-  let loyaltyNote="";
-  if(ownShop){ const prog=ownShop.prog===undefined ? (loyaltyFor(ownShop.n)?.prog||"") : ownShop.prog;
-    if(prog) loyaltyNote=`Покажи на кассе карту «${esc(prog)}»${ownShop.p!=null?` — ещё ${fmtP(ownShop.p)} бонусами`:""}.`;
-    else if(ownShop.p!=null) loyaltyNote=`В самом магазине «${esc(ownShop.n)}» свой кешбек ${fmtP(ownShop.p)}.`; }
-  // любимые категории/товары в магазинах этого месяца
-  const favHits=[];
-  for(const sh of looseDoc().shops||[]){ const f=sh.fav; if(!f || f.month!==nowMonth()) continue;
-    for(const [arr,kind] of [[f.cats||[],"любимая категория"],[f.goods||[],"любимый товар"]]) for(const x of arr) if(matches(x,rk.terms) || norm(x.n).includes(norm(query))) favHits.push({shop:sh,x,kind}); }
-  favHits.sort((a,b)=>(b.x.p??0)-(a.x.p??0));
-  const favNote = favHits.slice(0,3).map(h=>`«${esc(h.shop.n)}»${h.shop.prog?` по карте «${esc(h.shop.prog)}»`:""}: ${esc(h.x.n)}${h.x.p!=null?` — ${fmtP(h.x.p)}`:""} (${h.kind})`).join("<br>");
-  if(favNote) loyaltyNote = (loyaltyNote?loyaltyNote+"<br>":"") + favNote;
-  if(!ownShop){ const li=loyaltyFor(query); if(li && li.prog && !favNote) loyaltyNote=`У «${esc(li.canon)}» есть своя карта «${esc(li.prog)}» — добавь её во вкладке «Магазины», чтобы не забывать.`; }
+  // только банковский кешбек: бонусы и любимые категории магазинов — во вкладке «Магазины»
   const mer=rk.merchant;
   const merNote = mer ? `<p class="note" style="margin:8px 0 0">${mer.byCode ? `${esc(mer.name)} — это категория «${esc(mer.label)}».` : `«${esc(cap(mer.name))}» обычно проходит как «${esc(mer.label)}»${mer.mcc?` (код кассы MCC ${esc(mer.mcc)})`:""}. В отдельных точках код может отличаться.`}${rk.viaSimilar?` Такой категории на твоих картах нет — показываю похожую.`:""}</p>` : "";
-  const extra = merNote + (loyaltyNote ? `<p class="note" style="margin:8px 0 0">${loyaltyNote}</p>` : "");
+  const extra = merNote;
   const top=rk.list[0];
   if(!top){ box.innerHTML=""; return; }
   if(top.base){
@@ -342,8 +329,7 @@ function suggestions(q){
   const add=(n,p,bank,kind)=>{ const k=norm(n); const cur=m.get(k);
     if(!cur) m.set(k,{n,p,bank,kind}); else if(p!=null && (cur.p==null || p>cur.p)) m.set(k,{n,p,bank,kind:cur.kind==="shop"?"shop":kind}); };
   for(const c of cards){ for(const it of c.items||[]) if(!isBase(it.n)) add(it.n,it.p,c.bank,"cat"); for(const sh of c.shops||[]) add(sh.n,sh.p,c.bank,"shop"); }
-  for(const sh of looseDoc().shops||[]) add(sh.n,sh.p,sh.prog||"карта магазина","shop");
-  // только то, что сам пользователь вписал в карты и магазины
+  // только то, что сам пользователь вписал в банковские карты
   const terms=expand(q);
   const out=[];
   const own=new Set([...m.keys()]);
