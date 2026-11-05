@@ -68,9 +68,8 @@ function renderAnswer(rk){
   const box=$("#answerBox");
   if(!rk){ box.innerHTML=""; return; }
   // только банковский кешбек: бонусы и любимые категории магазинов — во вкладке «Магазины»
-  const mer=rk.merchant;
-  const merNote = mer ? `<p class="note" style="margin:8px 0 0">${mer.byCode ? `${esc(mer.name)} — это категория «${esc(mer.label)}».` : `«${esc(cap(mer.name))}» обычно проходит как «${esc(mer.label)}»${mer.mcc?` (код кассы MCC ${esc(mer.mcc)})`:""}. В отдельных точках код может отличаться.`}${rk.viaSimilar?` Такой категории на твоих картах нет — показываю похожую.`:""}</p>` : "";
-  const extra = merNote;
+  // пояснения про MCC-код ("Befree обычно проходит как…") не показываем — только ответ, какой картой платить
+  const extra = "";
   const top=rk.list[0];
   if(!top){ box.innerHTML=""; return; }
   if(top.base){
