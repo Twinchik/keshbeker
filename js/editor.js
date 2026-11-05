@@ -11,7 +11,7 @@ function openEditor(card, startTab="cur"){
     <h3>${editing.isNew?"Новая карта":"Изменить карту"}</h3>
     <div class="two">
       <div class="fl"><label for="edBank">Банк</label><input class="in" id="edBank" required maxlength="30" placeholder="Т-Банк" value="${esc(editing.bank)}"></div>
-      <div class="fl"><label for="edLabel">Подпись</label><input class="in" id="edLabel" maxlength="20" placeholder="Black или •• 4417" value="${esc(editing.label)}"></div>
+      <div class="fl"><label for="edLabel">Подпись</label><input class="in" id="edLabel" maxlength="20" placeholder="Black" value="${esc(editing.label)}"></div>
     </div>
     <div class="fl"><span class="lab">Фото карты</span>
       <div class="ph"><div class="ph-prev" id="edPhPrev" aria-hidden="true"></div>
