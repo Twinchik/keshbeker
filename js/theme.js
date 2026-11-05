@@ -40,3 +40,6 @@ document.addEventListener("click", e => {
 });
 darkMQ.addEventListener("change", syncThemeUI);
 syncThemeUI();
+
+// свежая версия сайта при каждом открытии (см. sw.js)
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
