@@ -345,6 +345,13 @@ body.reordering{-webkit-user-select:none;user-select:none}
 .sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:rise .3s cubic-bezier(.2,.8,.2,1)}
 @media (min-width:640px){.scrim{align-items:center}.sheet{border-radius:22px;max-height:88%}}
 .sheet h3{font-family:var(--display);font-size:18px;margin:0}
+/* обрезка аватарки */
+.crop-stage{position:relative;width:min(300px,100%);aspect-ratio:1;margin:4px auto 0;overflow:hidden;border-radius:16px;background:#000;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.crop-stage.drag{cursor:grabbing}
+.crop-stage canvas{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;pointer-events:none}
+.crop-ring{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.85);pointer-events:none}
+.crop-zoom{display:flex;align-items:center;gap:10px;width:min(300px,100%);margin:0 auto;color:var(--muted)}
+.crop-zoom input{flex:1;accent-color:var(--accent)}
 .fl{display:flex;flex-direction:column;gap:6px}
 .fl>label,.fl>.lab{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .in{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:10px 11px;font:inherit;color:var(--ink);width:100%;min-width:0}

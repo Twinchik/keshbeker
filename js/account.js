@@ -26,14 +26,63 @@ function fillAvatar(el){
   }
   const del=el.id==="bigAv" && $("#avDel"); if(del) del.hidden=!own;
 }
+// Аватарка: после выбора фото открывается окно, где круг можно сдвинуть и приблизить.
+// Возвращает готовую картинку 256×256 или null, если нажали «Отмена».
 async function makeAvatar(file){
-  let src;
-  try{ src=await createImageBitmap(file,{imageOrientation:"from-image"}); }
-  catch{ src=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=URL.createObjectURL(file); }); }
-  const S=256, side=Math.min(src.width,src.height); if(!side) throw new Error("empty");
-  const cv=document.createElement("canvas"); cv.width=S; cv.height=S;
-  cv.getContext("2d").drawImage(src,(src.width-side)/2,(src.height-side)/2,side,side,0,0,S,S);
-  return cv.toDataURL("image/jpeg",.85);
+  const cv=await loadBitmap(file);                       // из photo.js: учитывает поворот, уменьшает до 1600 px
+  return cropAvatar(cv);
+}
+function cropAvatar(cv){
+  return new Promise(resolve=>{
+    const s=document.createElement("div"); s.className="scrim"; s.id="avScrim"; s.style.zIndex=700;
+    s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Фото профиля">
+      <h3>Фото профиля</h3>
+      <p class="note" style="margin:0">Двигай фото пальцем, чтобы нужная часть попала в круг. Приближай двумя пальцами или ползунком.</p>
+      <div class="crop-stage" id="crStage"><canvas id="crImg"></canvas><span class="crop-ring" aria-hidden="true"></span></div>
+      <label class="crop-zoom"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6"/></svg>
+        <input type="range" id="crZoom" min="1" max="4" step="0.01" value="1" aria-label="Приближение">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6M11 8v6"/></svg></label>
+      <div class="acts"><div></div><div><button type="button" class="btn ghost" id="crCancel">Отмена</button><button type="button" class="btn primary" id="crOk">Готово</button></div></div>
+    </div>`;
+    document.body.appendChild(s);
+    const stage=$("#crStage"), img=$("#crImg"), zoomEl=$("#crZoom");
+    img.width=cv.width; img.height=cv.height; img.getContext("2d").drawImage(cv,0,0);
+    const W=cv.width, H=cv.height;
+    let V=stage.clientWidth, base=V/Math.min(W,H), z=1, x=0, y=0;
+    const sc=()=>base*z;
+    const clamp=()=>{ const k=sc(); x=Math.min(0,Math.max(V-W*k,x)); y=Math.min(0,Math.max(V-H*k,y)); };
+    const draw=()=>{ clamp(); img.style.transform=`translate(${x}px,${y}px) scale(${sc()})`; zoomEl.value=z; };
+    // приблизить так, чтобы точка (fx,fy) внутри круга осталась на месте
+    const zoomTo=(nz,fx=V/2,fy=V/2)=>{ nz=Math.min(4,Math.max(1,nz)); const k1=sc(); z=nz; const k2=sc(); x=fx-(fx-x)*k2/k1; y=fy-(fy-y)*k2/k1; draw(); };
+    x=(V-W*base)/2; y=(V-H*base)/2; draw();                 // старт: по центру, как было раньше
+
+    const pts=new Map(); let last=null;
+    const rel=e=>{ const r=stage.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+    const gesture=()=>{ const v=[...pts.values()];
+      if(v.length===1) return {cx:v[0][0], cy:v[0][1], d:0};
+      return {cx:(v[0][0]+v[1][0])/2, cy:(v[0][1]+v[1][1])/2, d:Math.hypot(v[0][0]-v[1][0], v[0][1]-v[1][1])}; };
+    stage.addEventListener("pointerdown",e=>{ stage.setPointerCapture(e.pointerId); pts.set(e.pointerId,rel(e)); last=gesture(); stage.classList.add("drag"); });
+    stage.addEventListener("pointermove",e=>{ if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,rel(e)); const g=gesture();
+      if(last && g.d && last.d) zoomTo(z*g.d/last.d, g.cx, g.cy);
+      if(last){ x+=g.cx-last.cx; y+=g.cy-last.cy; draw(); }
+      last=g; });
+    const up=e=>{ pts.delete(e.pointerId); last=pts.size?gesture():null; if(!pts.size) stage.classList.remove("drag"); };
+    stage.addEventListener("pointerup",up); stage.addEventListener("pointercancel",up);
+    stage.addEventListener("wheel",e=>{ e.preventDefault(); const [fx,fy]=rel(e); zoomTo(z*Math.exp(-e.deltaY/300),fx,fy); },{passive:false});
+    zoomEl.addEventListener("input",()=>zoomTo(+zoomEl.value));
+    const onResize=()=>{ const nv=stage.clientWidth; if(!nv||nv===V) return; const k=nv/V; x*=k; y*=k; V=nv; base=V/Math.min(W,H); draw(); };
+    addEventListener("resize",onResize);
+
+    const done=val=>{ removeEventListener("resize",onResize); s.remove(); resolve(val); };
+    $("#crCancel").onclick=()=>done(null);
+    s.addEventListener("click",e=>{ if(e.target===s) done(null); });
+    $("#crOk").onclick=()=>{
+      const k=sc(), S=256, out=document.createElement("canvas"); out.width=S; out.height=S;
+      const g=out.getContext("2d"); g.imageSmoothingQuality="high";
+      g.drawImage(cv, -x/k, -y/k, V/k, V/k, 0, 0, S, S);
+      done(out.toDataURL("image/jpeg",.85));
+    };
+  });
 }
 async function setAvatar(url){
   const doc={...(profileDoc()||{id:PROFILE_ID}), id:PROFILE_ID, avatar:url, updatedAt:Date.now()};
@@ -42,7 +91,8 @@ async function setAvatar(url){
 }
 function wireAvatar(sheet){
   $("#avFile").onchange=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
-    try{ await setAvatar(await makeAvatar(f)); toast("Аватарка обновлена"); }catch{ toast("Не получилось открыть фото"); } };
+    let url; try{ url=await makeAvatar(f); }catch{ return toast("Не получилось открыть фото"); }
+    if(url){ await setAvatar(url); toast("Аватарка обновлена"); } };
   $("#avDel").onclick=()=>setAvatar(null);
 }
 $("#acctBtn").addEventListener("click",()=>{
