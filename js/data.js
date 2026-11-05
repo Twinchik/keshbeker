@@ -7,7 +7,7 @@ const STYLES = {
   white:{name:"Белая",bg:"linear-gradient(160deg,#fbfcfd,#e8ecf1)",ink:"#1c2c6e"},
   red:{name:"Красная",bg:"linear-gradient(135deg,#e5302a,#c71a14)",ink:"#fff"},
   orange:{name:"Оранжевая",bg:"linear-gradient(100deg,#f8a51c,#f0512a 60%,#e9322b)",ink:"#fff"},
-  black:{name:"Чёрная",bg:"#161616",ink:"#ececec",sheen:"radial-gradient(120% 140% at -10% 50%,#050505 0 42%,transparent 42.5%)"},
+  black:{name:"Чёрная",bg:"#050505",ink:"#ececec",sheen:"none"},
   violet:{name:"Фиолетовая",bg:"linear-gradient(135deg,#7b4dff,#4d23c9)",ink:"#fff"},
   mint:{name:"Мятная",bg:"linear-gradient(135deg,#34c9a3,#16977b)",ink:"#062a21"},
   graphite:{name:"Графит",bg:"linear-gradient(135deg,#4a515c,#2b3038)",ink:"#f1f3f6"},
