@@ -37,7 +37,6 @@ function cropAvatar(cv){
     const s=document.createElement("div"); s.className="scrim"; s.id="avScrim"; s.style.zIndex=700;
     s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Фото профиля">
       <h3>Фото профиля</h3>
-      <p class="note" style="margin:0">Двигай фото пальцем, чтобы нужная часть попала в круг. Приближай двумя пальцами или ползунком.</p>
       <div class="crop-stage" id="crStage"><canvas id="crImg"></canvas><span class="crop-ring" aria-hidden="true"></span></div>
       <label class="crop-zoom"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M8 11h6"/></svg>
         <input type="range" id="crZoom" min="1" max="4" step="0.01" value="1" aria-label="Приближение">
