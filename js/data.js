@@ -183,7 +183,7 @@ Coffee Like|кофе лайк:fastfood;Кофе Хауз|coffee house:fastfood;D
 Светофор:grocery;Чижик:grocery;Spar|спар|евроспар:grocery;Монетка:grocery;Мария-Ра|мария ра:grocery;Верный:grocery;Ярче:grocery;Бахетле:grocery;Магнолия:grocery;
 Купер|сбермаркет|kuper:grocery;Утконос:grocery;Табрис:grocery;Мясницкий ряд:grocery;Командор:grocery;Fresh market:grocery;
 Красное&Белое|красное и белое|красное белое|кб:alcohol;Бристоль:alcohol;ВинЛаб|винлаб:alcohol;Simple Wine|симпл вайн:alcohol;Ароматный мир:alcohol;Норман:alcohol;
-Ригла:pharmacy;Горздрав:pharmacy;36,6|36.6|аптека 36:pharmacy;Аптека.ру|аптека ру:pharmacy;ЕАптека|еаптека:pharmacy;Столички:pharmacy;Асна:pharmacy;Здравсити|zdravcity:pharmacy;
+Ригла:pharmacy;Горздрав:pharmacy;36,6|36.6|аптека 36:pharmacy;Аптека.ру|аптека ру:pharmacy;ЕАптека|еаптека:pharmacy;Столички:pharmacy;Асна:pharmacy;Здравсити|zdravcity:pharmacy;Фармленд|farmlend|фарм ленд:pharmacy;Фармакопейка:pharmacy;Имплозия:pharmacy;Аптека от склада:pharmacy;Социальная аптека:pharmacy;Аптеки Плюс|аптека плюс:pharmacy;
 Озерки:pharmacy;Живика:pharmacy;Апрель|аптека апрель:pharmacy;Планета здоровья:pharmacy;Здоров.ру|здоров ру:pharmacy;Аптека Вита|вита:pharmacy;Мелодия здоровья:pharmacy;
 Невис:pharmacy;Неофарм:pharmacy;Самсон-фарма|самсон фарма:pharmacy;Максавит:pharmacy;Будь здоров:pharmacy;Ваша аптека:pharmacy;
 Инвитро|invitro:medical;Гемотест:medical;KDL|кдл:medical;Хеликс|helix:medical;Ситилаб:medical;Медси|medsi:medical;СМ-Клиника|см клиника:medical;
