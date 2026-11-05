@@ -20,7 +20,6 @@ function openEditor(card, startTab="cur"){
           <label class="btn" for="edGal">Из галереи<input class="vh" id="edGal" type="file" accept="image/*"></label>
           <button type="button" class="btn ghost" id="edPhDel" hidden>Убрать фото</button>
         </div></div>
-      <p class="note" style="margin:0">Сфотографируй лицевую сторону карты. Номер лучше прикрыть пальцем. Фото видно только тебе.</p>
     </div>
     <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}</div></div>
     <div class="fl"><span class="lab">Кешбек</span>
