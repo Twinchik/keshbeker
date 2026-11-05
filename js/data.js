@@ -249,14 +249,19 @@ function merchantFor(q){
 }
 function merchantSuggestions(q){
   const nq=norm(q); if(nq.length<2) return [];
+  // названия, которые уже есть на картах (например «Вкусно и точка» в Альфе) — их покажет обычная подсказка
+  const own=new Set(); for(const c of cards) for(const it of [...(c.items||[]),...(c.shops||[])]) own.add(norm(it.n));
   const out=[], seen=new Set();
   for(const [names,key] of MERCHANTS){
     const hit=names.find(n=>norm(n).startsWith(nq) || (nq.length>=3 && norm(n).includes(nq))); if(!hit || seen.has(names[0])) continue; seen.add(names[0]);
+    if(names.some(n=>own.has(norm(n)))) continue;
     const g=MCC_GROUPS[key]; let best=null;
     const prim=g.terms.filter(t=>!t.startsWith("~")), sim=g.terms.filter(t=>t.startsWith("~")).map(t=>t.slice(1));
-    for(const ts of [prim,sim]){ if(best||!ts.length) break;
-      for(const c of cards) for(const it of c.items||[]) if(!isBase(it.n) && matches(it,ts) && (!best||it.p>best.p)) best={p:it.p,bank:c.bank}; }
-    if(best) out.push({n:names[0], p:best.p, bank:best.bank, kind:"merchant", cat:g.label});
+    // сначала точная категория (Фастфуд); похожую (Кафе) берём, только если точной нет ни на одной карте,
+    // и тогда показываем именно её название — чтобы не выглядело, будто на карте есть «Фастфуд»
+    for(const [ts,isSim] of [[prim,false],[sim,true]]){ if(best||!ts.length) break;
+      for(const c of cards) for(const it of c.items||[]) if(!isBase(it.n) && matches(it,ts) && (!best||it.p>best.p)) best={p:it.p,bank:c.bank,cat:isSim?it.n:g.label}; }
+    out.push(best ? {n:names[0], p:best.p, bank:best.bank, kind:"merchant", cat:best.cat} : {n:names[0], p:null, bank:"", kind:"merchant", cat:g.label});
     if(out.length>=4) break;
   }
   return out;
