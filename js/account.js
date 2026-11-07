@@ -100,13 +100,14 @@ $("#acctBtn").addEventListener("click",()=>{
     <div class="acct"><label class="avatar big av-edit" id="bigAv" for="avFile" title="Сменить фото"></label><input class="vh" id="avFile" type="file" accept="image/*"><span class="av-acts"><label class="linkbtn" for="avFile">Сменить фото</label><button type="button" class="linkbtn" id="avDel" hidden>Убрать</button></span><strong id="acctName"></strong><span id="acctSub"></span></div>
     <p class="sync${account.synced?"":" off"}">${account.synced?`Синхронизировано · ${cards.length} ${plural(cards.length,["карта","карты","карт"])}`:"Карты хранятся только в этом браузере"}</p>
     <div class="acct-theme">${themeSwitchHTML()}</div>
+    <button type="button" class="install-btn wide" data-install hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Установить приложение</button>
     <p class="note">${account.synced?"Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.":"Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, перенесутся в аккаунт сами."}</p>
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
   document.body.appendChild(s);
   $("#acctName").textContent = account.synced ? (v?.email||"Твой аккаунт") : "Гость";
   $("#acctSub").textContent = account.synced ? "Аккаунт Кешбекера" : "Ты не вошёл в аккаунт";
-  fillAvatar($("#bigAv")); wireAvatar(s);
+  fillAvatar($("#bigAv")); wireAvatar(s); refreshInstallUI();
   s.addEventListener("click",e=>{ if(e.target===s||e.target.id==="acctClose") s.remove();
     if(e.target.id==="signOut"){ s.remove(); signOut(); }
     if(e.target.id==="toLogin"){ s.remove(); loginFromGuest(); } });
