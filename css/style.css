@@ -145,10 +145,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tabs{--rim:rgba(255,255,255,.34);--rim-hi:rgba(255,255,255,.7);--rim-lo:rgba(255,255,255,.18);--glow:rgba(255,255,255,.11)}}
 :root[data-theme="dark"] .tabs{--rim:rgba(255,255,255,.34);--rim-hi:rgba(255,255,255,.7);--rim-lo:rgba(255,255,255,.18);--glow:rgba(255,255,255,.11)}
 .tab-pill{position:absolute;z-index:0;top:5px;bottom:5px;left:5px;width:calc(50% - 5px);border-radius:999px;background:var(--pill-bg);
-  transition:transform .62s cubic-bezier(.55,0,.25,1)}
+  transition:transform .34s cubic-bezier(.55,0,.25,1)}
 .tabs:has(button[data-view="shops"][aria-selected="true"]) .tab-pill{transform:translateX(100%)}
 .tabs.moving .tab-pill{z-index:2;pointer-events:none;-webkit-backdrop-filter:brightness(1.12) saturate(1.6);backdrop-filter:brightness(1.12) saturate(1.6);
-  animation:glassLens .62s cubic-bezier(.4,0,.2,1) both}
+  animation:glassLens .34s cubic-bezier(.4,0,.2,1) both}
 @keyframes glassLens{
   0%  {scale:1;background:var(--pill-bg);box-shadow:0 0 0 0 transparent}
   18% {scale:1.08 1.5;background:transparent;box-shadow:0 0 0 1px var(--rim),inset 1px 1.5px 1px -.5px var(--rim-hi),inset -1px -1.5px 2px -.5px var(--rim-lo),inset 0 0 8px var(--rim-lo)}
@@ -157,11 +157,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 /* светлое пятно на фоне меню, которое едет вместе с линзой */
 .tab-glow{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:0}
 .tab-glow::before{content:"";position:absolute;top:-60%;bottom:-60%;left:-10%;width:70%;background:radial-gradient(closest-side,var(--glow),transparent);
-  opacity:0;transition:transform .62s cubic-bezier(.55,0,.25,1),opacity .25s ease}
+  opacity:0;transition:transform .34s cubic-bezier(.55,0,.25,1),opacity .25s ease}
 .tabs:has(button[data-view="shops"][aria-selected="true"]) .tab-glow::before{transform:translateX(71.43%)}
 .tabs.moving .tab-glow::before{opacity:1}
 /* под линзой иконка как будто увеличивается */
-.tabs.moving button[aria-selected="true"]{animation:glassMag .62s cubic-bezier(.4,0,.2,1)}
+.tabs.moving button[aria-selected="true"]{animation:glassMag .34s cubic-bezier(.4,0,.2,1)}
 @keyframes glassMag{0%,100%{scale:1}45%{scale:1.12}}
 .tabs button{position:relative;z-index:1;flex:1;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;font-size:12px;font-weight:600;border-radius:999px;transition:color .2s}
 .tabs button[aria-selected="true"]{color:var(--ink)}
