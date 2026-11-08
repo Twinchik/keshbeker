@@ -16,9 +16,6 @@ $("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-vie
   b.classList.remove("anim"); void b.offsetWidth; b.classList.add("anim");
   b.addEventListener("animationend",()=>b.classList.remove("anim"),{once:true});
   const changed=b.dataset.view!==view;
-  // «жидкое стекло»: пока подсветка переезжает, она становится прозрачной линзой и чуть раздувается
-  if(changed){ const nav=$("#viewTabs"); nav.classList.remove("moving"); void nav.offsetWidth; nav.classList.add("moving");
-    clearTimeout(nav._mv); nav._mv=setTimeout(()=>nav.classList.remove("moving"),400); }
   setView(b.dataset.view);
   if(changed){ const els = view==="shops" ? [$("#shopsView")] : [...document.querySelectorAll("#cardsView > *")];
     els.forEach(el=>{ el.classList.remove("viewin"); void el.offsetWidth; el.classList.add("viewin"); el.addEventListener("animationend",()=>el.classList.remove("viewin"),{once:true}); }); }

@@ -55,29 +55,90 @@ document.addEventListener("pointerdown", e => {
   addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);
 });
 
-// переключатели .seg: одна плашка выбора, которая переезжает к нажатой кнопке «жидким стеклом»
-function placeSeg(seg, animate){
-  let pill = seg.querySelector(":scope > .seg-pill");
-  if(!pill){ pill = document.createElement("span"); pill.className = "seg-pill"; pill.setAttribute("aria-hidden","true"); seg.prepend(pill); }
-  const sel = seg.querySelector(':scope > button[aria-selected="true"]');
-  if(!sel || !sel.offsetWidth){ seg.classList.remove("ready"); seg._sel = null; return; }
-  pill.style.width = sel.offsetWidth + "px";
-  pill.style.transform = `translateX(${sel.offsetLeft}px)`;
-  if(animate && seg._sel && seg._sel !== sel && seg.classList.contains("ready")){
-    seg.classList.remove("moving"); void seg.offsetWidth; seg.classList.add("moving");
-    clearTimeout(seg._mv); seg._mv = setTimeout(() => seg.classList.remove("moving"), 400);
+// Переключатели в стиле Liquid Glass: «Карты/Магазины» (.tabs) и все .seg.
+// Плашка выбора движется на пружине (с небольшим перелётом), а не по таймеру:
+//  • касание — плашка поднимается: становится прозрачной линзой, раздувается, буквы под ней крупнее;
+//  • её можно тащить пальцем между кнопками, при отпускании выбирается ближайшая;
+//  • в движении тянется по ходу и сплющивается по высоте, остановилась — опускается и заливается цветом.
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+function glassSwitch(root){
+  if(root._gs) return; root._gs = true; root.classList.add("gs");
+  let pill = root.querySelector(":scope > .gpill");
+  if(!pill){ pill = document.createElement("span"); pill.className = "gpill seg-pill"; pill.setAttribute("aria-hidden","true"); root.prepend(pill); }
+  const isTabs = root.classList.contains("tabs");
+  const LIFT = isTabs ? [0.14, 0.42] : [0.07, 0.28];          // насколько раздувается поднятая линза (ширина, высота)
+  const btns = () => [...root.querySelectorAll(":scope > button")];
+  let x = 0, v = 0, tx = 0, w = 0, tw = 0, l = 0, lv = 0, pressed = false, drag = null, raf = 0, last = 0, placed = false;
+  const selBtn = () => btns().find(b => b.getAttribute("aria-selected") === "true");
+  function aim(b, instant){
+    if(!b || !b.offsetWidth) return false;
+    tx = b.offsetLeft; tw = b.offsetWidth;
+    if(instant || !placed || reduceMotion.matches){ x = tx; w = tw; v = 0; placed = true; draw(); return true; }
+    kick(); return true;
   }
-  seg._sel = sel;
-  if(!seg.classList.contains("ready")){ void pill.offsetWidth; seg.classList.add("ready"); }
-}
-const segRO = new ResizeObserver(es => es.forEach(e => placeSeg(e.target, false)));
-function watchSegs(root){
-  (root.matches?.(".seg") ? [root] : []).concat([...(root.querySelectorAll?.(".seg") || [])]).forEach(seg => {
-    if(seg._watched) return; seg._watched = true; segRO.observe(seg); placeSeg(seg, false);
+  function draw(){
+    const sp = Math.min(Math.abs(v) / 2200, 0.22);            // растяжение от скорости
+    const sx = 1 + l * LIFT[0] + sp, sy = 1 + l * LIFT[1] - sp * 0.7;
+    pill.style.width = w + "px";
+    pill.style.transform = `translateX(${x}px) scale(${sx},${sy})`;
+    pill.style.setProperty("--l", l.toFixed(3));
+    const c = x + w / 2;
+    btns().forEach(b => {                                        // «лупа»: буквы под линзой чуть крупнее
+      const d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c) / b.offsetWidth;
+      const m = 1 + 0.1 * l * Math.max(0, 1 - d);
+      b.style.scale = m > 1.001 ? m.toFixed(3) : "";
+    });
+  }
+  function step(t){
+    const dt = Math.min(0.032, (t - (last || t)) / 1000) || 0.016; last = t;
+    const goal = drag ? drag.x : tx;
+    const k = drag ? 900 : 330, c = drag ? 50 : 24;            // пружина: при перетаскивании жёстче, при отпускании мягче, с перелётом
+    v += (k * (goal - x) - c * v) * dt; x += v * dt;
+    w += (tw - w) * Math.min(1, dt * 18);
+    const moving = Math.abs(goal - x) > 0.5 || Math.abs(v) > 15;
+    const lt = (pressed || moving) ? 1 : 0;
+    lv += (420 * (lt - l) - 30 * lv) * dt; l += lv * dt; l = Math.max(0, Math.min(1.08, l));
+    if(!moving && !pressed && Math.abs(l) < 0.01 && Math.abs(lv) < 0.05){ x = tx; v = 0; l = 0; lv = 0; draw(); raf = 0; last = 0; return; }
+    draw(); raf = requestAnimationFrame(step);
+  }
+  function kick(){ if(!raf){ last = 0; raf = requestAnimationFrame(step); } }
+  function nearest(px){ let best = null, bd = 1e9; btns().forEach(b => { const d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - px); if(d < bd){ bd = d; best = b; } }); return best; }
+  const rel = e => e.clientX - root.getBoundingClientRect().left;
+  root.addEventListener("pointerdown", e => {
+    const b = e.target.closest("button"); if(!b || b.parentElement !== root || reduceMotion.matches || !placed) return;
+    pressed = true; drag = null; root._start = rel(e); root._moved = false;
+    if(b !== selBtn()){ tx = b.offsetLeft; tw = b.offsetWidth; }  // линза сразу едет туда, куда нажали
+    kick();
+    const mv = ev => {
+      const px = rel(ev);
+      if(!root._moved && Math.abs(px - root._start) < 6) return;
+      root._moved = true;
+      const lo = btns()[0].offsetLeft, hi = btns().at(-1).offsetLeft + btns().at(-1).offsetWidth - w;
+      drag = { x: Math.max(lo - 8, Math.min(hi + 8, px - w / 2)) };
+      const n = nearest(px); tw = n.offsetWidth; kick();
+    };
+    const up = ev => {
+      removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
+      pressed = false;
+      if(drag){
+        const n = nearest(drag.x + w / 2); drag = null;
+        // клик выбранной кнопке, а «случайный» клик после перетаскивания гасим
+        root.addEventListener("click", ce => { if(!ce._gs){ ce.stopPropagation(); ce.preventDefault(); } }, { capture: true, once: true });
+        setTimeout(() => { const ce = new MouseEvent("click", { bubbles: true }); ce._gs = true; n.dispatchEvent(ce); }, 0);
+        tx = n.offsetLeft; tw = n.offsetWidth;
+      } else if(ev.type === "pointercancel"){ aim(selBtn()); }
+      kick();
+    };
+    addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);
   });
+  new MutationObserver(() => aim(selBtn())).observe(root, { subtree: true, attributes: true, attributeFilter: ["aria-selected"] });
+  new ResizeObserver(() => aim(selBtn(), true)).observe(root);
+  aim(selBtn(), true);
 }
-new MutationObserver(ms => ms.forEach(m => {
-  if(m.type === "attributes"){ const seg = m.target.parentElement; if(seg?.classList.contains("seg") && m.target.getAttribute("aria-selected") === "true") placeSeg(seg, true); }
-  else m.addedNodes.forEach(n => n.nodeType === 1 && watchSegs(n));
-})).observe(document.body, { subtree:true, childList:true, attributes:true, attributeFilter:["aria-selected"] });
-watchSegs(document.body);
+function watchSwitches(node){
+  if(node.nodeType !== 1) return;
+  if(node.matches(".seg, .tabs")) glassSwitch(node);
+  node.querySelectorAll(".seg, .tabs").forEach(glassSwitch);
+}
+new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(watchSwitches))).observe(document.body, { childList: true, subtree: true });
+watchSwitches(document.body);
