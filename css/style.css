@@ -47,6 +47,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
   background:radial-gradient(70px 70px at var(--x) var(--y),var(--g-hot),transparent 70%);transition:opacity .35s ease}
 .btn.down{scale:1.08 1.1}
 .btn.down::after{opacity:1;transition:opacity .08s}
+.fading .btn{-webkit-backdrop-filter:none;backdrop-filter:none}
 .btn.primary{background:var(--ink);color:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}
 .btn.primary::before{background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%);box-shadow:inset 1.5px 1.5px 1px -.5px rgba(255,255,255,.55),inset -1px -1.5px 1px -.5px rgba(255,255,255,.18)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary::before{background:linear-gradient(180deg,rgba(255,255,255,.5),transparent 60%);box-shadow:inset 1.5px 1.5px 1px -.5px #fff,inset -1px -1.5px 1px -.5px rgba(0,0,0,.15)}}

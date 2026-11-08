@@ -74,9 +74,12 @@ function glassSwitch(root){
   const btns = () => [...root.querySelectorAll(":scope > button")];
   let x = 0, v = 0, tx = 0, w = 0, tw = 0, l = 0, lv = 0, pressed = false, drag = null, raf = 0, last = 0, placed = false;
   const selBtn = () => btns().find(b => b.getAttribute("aria-selected") === "true");
+  // размеры кнопок запоминаем заранее, чтобы не пересчитывать раскладку страницы в каждом кадре (иначе подлагивает)
+  let geo = [];
+  const measure = () => { geo = btns().map(b => ({ b, c: b.offsetLeft + b.offsetWidth / 2, w: b.offsetWidth, m: b._m || 1 })); };
   function aim(b, instant){
     if(!b || !b.offsetWidth) return false;
-    tx = b.offsetLeft; tw = b.offsetWidth;
+    measure(); tx = b.offsetLeft; tw = b.offsetWidth;
     if(instant || !placed || reduceMotion.matches){ x = tx; w = tw; v = 0; placed = true; draw(); return true; }
     kick(); return true;
   }
@@ -87,10 +90,10 @@ function glassSwitch(root){
     pill.style.transform = `translateX(${x}px) scale(${sx},${sy})`;
     pill.style.setProperty("--l", l.toFixed(3));
     const c = x + w / 2;
-    btns().forEach(b => {                                        // «лупа»: буквы под линзой чуть крупнее
-      const d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c) / b.offsetWidth;
-      const m = 1 + 0.06 * l * Math.max(0, 1 - d);
-      b.style.scale = m > 1.001 ? m.toFixed(3) : "";
+    geo.forEach(g => {                                           // «лупа»: буквы под линзой чуть крупнее
+      const d = Math.abs(g.c - c) / g.w;
+      const m = Math.round((1 + 0.06 * l * Math.max(0, 1 - d)) * 500) / 500;
+      if(m !== g.m){ g.m = g.b._m = m; g.b.style.scale = m > 1 ? m : ""; }
     });
   }
   function step(t){
@@ -106,19 +109,19 @@ function glassSwitch(root){
     draw(); raf = requestAnimationFrame(step);
   }
   function kick(){ if(!raf){ last = 0; raf = requestAnimationFrame(step); } }
-  function nearest(px){ let best = null, bd = 1e9; btns().forEach(b => { const d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - px); if(d < bd){ bd = d; best = b; } }); return best; }
+  function nearest(px){ let best = null, bd = 1e9; geo.forEach(g => { const d = Math.abs(g.c - px); if(d < bd){ bd = d; best = g.b; } }); return best; }
   const rel = e => e.clientX - root.getBoundingClientRect().left;
   root.addEventListener("pointerdown", e => {
     const b = e.target.closest("button"); if(!b || b.parentElement !== root || reduceMotion.matches || !placed) return;
-    pressed = true; drag = null; root._start = rel(e); root._moved = false;
+    pressed = true; drag = null; root._start = rel(e); root._moved = false; measure();
+    const lo = geo[0].c - geo[0].w / 2, hi = geo.at(-1).c + geo.at(-1).w / 2;
     if(b !== selBtn()){ tx = b.offsetLeft; tw = b.offsetWidth; }  // линза сразу едет туда, куда нажали
     kick();
     const mv = ev => {
       const px = rel(ev);
       if(!root._moved && Math.abs(px - root._start) < 6) return;
       root._moved = true;
-      const lo = btns()[0].offsetLeft, hi = btns().at(-1).offsetLeft + btns().at(-1).offsetWidth - w;
-      drag = { x: Math.max(lo - 8, Math.min(hi + 8, px - w / 2)) };
+      drag = { x: Math.max(lo - 8, Math.min(hi - w + 8, px - w / 2)) };
       const n = nearest(px); tw = n.offsetWidth; kick();
     };
     const up = ev => {
@@ -146,3 +149,21 @@ function watchSwitches(node){
 }
 new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(watchSwitches))).observe(document.body, { childList: true, subtree: true });
 watchSwitches(document.body);
+
+// Плавное исчезновение/появление блоков (разделы, вкладки «Сейчас/Следующий»).
+// Пока блок полупрозрачный, стеклянные кнопки внутри него не могут «видеть» фон и на миг ломаются —
+// поэтому на время анимации стекло в них выключаем (на ровном фоне разницы не видно).
+function fadeThrough(els, swap, isCurrent = () => true){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ swap(); return; }
+  els.forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.classList.add("fading"); });
+  const outs = els.map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }));
+  Promise.all(outs.map(a => a.finished.catch(() => {}))).then(() => {
+    if(!isCurrent()) return;
+    const ins = swap() || els;
+    outs.forEach(a => a.cancel());
+    els.forEach(el => el.classList.remove("fading"));
+    ins.forEach(el => { el.classList.add("fading");
+      const a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, delay: 30, easing: "cubic-bezier(0,0,.2,1)", fill: "backwards" });
+      a.finished.catch(() => {}).then(() => { if(!el.getAnimations().length) el.classList.remove("fading"); }); });
+  });
+}

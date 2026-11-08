@@ -42,11 +42,9 @@ function openEditor(card, startTab="cur"){
   let tabFade=0, tab0;
   const setTab=(t,first)=>{ if(!first && t===tab0) return; tab0=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
     const els=[$("#edTabNote"),$("#edRows"),$("#edAdd").parentElement];
-    if(first || matchMedia("(prefers-reduced-motion: reduce)").matches){ applyTab(t); return; }
+    if(first){ applyTab(t); return; }
     const my=++tabFade;
-    const outs=els.map(el=>el.animate([{opacity:getComputedStyle(el).opacity},{opacity:0}],{duration:110,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
-    Promise.all(outs.map(a=>a.finished.catch(()=>{}))).then(()=>{ if(my!==tabFade) return; applyTab(t); outs.forEach(a=>a.cancel());
-      els.forEach(el=>el.animate([{opacity:0},{opacity:1}],{duration:220,delay:30,easing:"cubic-bezier(0,0,.2,1)",fill:"backwards"})); });
+    fadeThrough(els, () => { applyTab(t); }, () => my===tabFade);
   };
   const applyTab=t=>{ syncRows(); tab=t;
     $("#edTabNote").textContent = t==="cur" ? `Кешбек, который действует сейчас, в ${monthOnly(nowMonth())}.` : `Выбери категории на ${monthOnly(nm)} заранее. 1 ${genMonth(nm)} они сами станут текущими.`;

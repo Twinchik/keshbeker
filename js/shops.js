@@ -25,16 +25,7 @@ let viewSwitch = 0, wantView = null;
 function switchView(v){
   const my = ++viewSwitch; wantView = v;
   $("#viewTabs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===v));
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ wantView = null; setView(v); return; }
-  const old = viewEls(view);
-  old.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
-  const outs = old.map(el=>el.animate([{opacity:getComputedStyle(el).opacity},{opacity:0}],{duration:110,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
-  Promise.all(outs.map(a=>a.finished.catch(()=>{}))).then(()=>{
-    if(my!==viewSwitch) return;
-    wantView = null; setView(v);
-    outs.forEach(a=>a.cancel());
-    viewEls(v).forEach(el=>el.animate([{opacity:0},{opacity:1}],{duration:220,delay:40,easing:"cubic-bezier(0,0,.2,1)",fill:"backwards"}));
-  });
+  fadeThrough(viewEls(view), () => { wantView = null; setView(v); return viewEls(v); }, () => my === viewSwitch);
 }
 // Карты лояльности магазинов: у сети своя карта, банковские тут не участвуют.
 // "" — у сети нет своей карты. Название можно поправить вручную при добавлении.
