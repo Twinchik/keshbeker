@@ -37,13 +37,24 @@ function openEditor(card, startTab="cur"){
     // черновик следующего месяца: магазины и «на всё» переносятся, категории выбираются заново
     editing.next={month:nm, items:[{n:"",p:5},...(editing.items||[]).filter(i=>isBase(i.n)).map(i=>({...i}))], draft:true};
   }
-  const setTab=t=>{ syncRows(); tab=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  // смена «Сейчас/Следующий» плавная, как смена разделов: подсказка, строки и кнопки под ними
+  // быстро гаснут, меняются и мягко проявляются (кнопка «Скопировать из текущего» не выскакивает резко)
+  let tabFade=0, tab0;
+  const setTab=(t,first)=>{ if(!first && t===tab0) return; tab0=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+    const els=[$("#edTabNote"),$("#edRows"),$("#edAdd").parentElement];
+    if(first || matchMedia("(prefers-reduced-motion: reduce)").matches){ applyTab(t); return; }
+    const my=++tabFade;
+    const outs=els.map(el=>el.animate([{opacity:getComputedStyle(el).opacity},{opacity:0}],{duration:110,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
+    Promise.all(outs.map(a=>a.finished.catch(()=>{}))).then(()=>{ if(my!==tabFade) return; applyTab(t); outs.forEach(a=>a.cancel());
+      els.forEach(el=>el.animate([{opacity:0},{opacity:1}],{duration:220,delay:30,easing:"cubic-bezier(0,0,.2,1)",fill:"backwards"})); });
+  };
+  const applyTab=t=>{ syncRows(); tab=t;
     $("#edTabNote").textContent = t==="cur" ? `Кешбек, который действует сейчас, в ${monthOnly(nowMonth())}.` : `Выбери категории на ${monthOnly(nm)} заранее. 1 ${genMonth(nm)} они сами станут текущими.`;
     $("#edCopy").hidden = t==="cur"; $("#edClearNext").hidden = t==="cur" || editing.next.draft; drawRows(); };
   $("#edSeg").onclick=e=>{const b=e.target.closest("[data-tab]"); if(b) setTab(b.dataset.tab);};
   $("#edCopy").onclick=()=>{ editing.next.items=(editing.items||[]).map(i=>({...i})); editing.next.draft=false; drawRows(); };
-  $("#edClearNext").onclick=()=>{ editing.next={month:nm,items:[{n:"",p:5},...(editing.items||[]).filter(i=>isBase(i.n)).map(i=>({...i}))],draft:true,cleared:true}; setTab("next"); };
-  setTab(tab);
+  $("#edClearNext").onclick=()=>{ editing.next={month:nm,items:[{n:"",p:5},...(editing.items||[]).filter(i=>isBase(i.n)).map(i=>({...i}))],draft:true,cleared:true}; setTab("next",true); };
+  setTab(tab,true);
   setTimeout(()=>$("#edBank").focus(),50);
   s.addEventListener("click",e=>{ if(e.target===s) closeEditor(); });
   $("#edCancel").onclick=closeEditor;
