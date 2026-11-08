@@ -16,6 +16,10 @@
 html{-webkit-text-size-adjust:100%}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
+/* как в приложении: текст интерфейса нельзя выделить и скопировать долгим нажатием,
+   и не всплывает меню «Скопировать / Поделиться»; в полях ввода выделение работает как обычно */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,[contenteditable="true"]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 img{max-width:100%}
 [hidden]{display:none!important}
 body{overflow-x:clip;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:20px 48px}
