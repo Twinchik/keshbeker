@@ -43,3 +43,10 @@ syncThemeUI();
 
 // свежая версия сайта при каждом открытии (см. sw.js)
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+// «стеклянное» нажатие на кнопки (как в iOS): кнопка чуть раздувается и вокруг вспыхивает тонкая каёмка
+document.addEventListener("pointerdown", e => {
+  const b = e.target.closest(".btn, .seg button"); if(!b || b.disabled) return;
+  b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
+  clearTimeout(b._pop); b._pop = setTimeout(() => b.classList.remove("pop"), 460);
+});

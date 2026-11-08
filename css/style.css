@@ -103,6 +103,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
 .sync.off::before{background:var(--warn)}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+/* «стеклянное» нажатие: кнопка раздувается, вокруг вспыхивает каёмка и гаснет */
+.btn,.seg button{position:relative;-webkit-tap-highlight-color:transparent}
+.btn.pop,.seg button.pop{animation:glassPop .42s cubic-bezier(.3,.7,.3,1)}
+.btn.pop::after,.seg button.pop::after{content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
+  box-shadow:0 0 0 1px var(--pop-rim,rgba(0,0,0,.2)),inset 0 1px 1px rgba(255,255,255,.6);animation:glassRim .42s ease-out forwards}
+@keyframes glassPop{0%{scale:1}28%{scale:1.06 1.12}100%{scale:1}}
+@keyframes glassRim{0%{opacity:0}22%{opacity:1}65%{opacity:.7}100%{opacity:0}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pop-rim:rgba(255,255,255,.55)}}
+:root[data-theme="dark"]{--pop-rim:rgba(255,255,255,.55)}
+@media (prefers-reduced-motion:reduce){.btn.pop,.seg button.pop,.btn.pop::after,.seg button.pop::after{animation:none}}
 .seg button{border:0;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--muted);display:flex;flex-direction:column;align-items:center;line-height:1.2}
 .seg button small{font-weight:500;font-size:12px}
 .seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
