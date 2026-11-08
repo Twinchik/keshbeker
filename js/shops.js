@@ -145,13 +145,33 @@ function shopItemHTML(g){
     } else if(o){ favs=`<button type="button" class="offer add" data-edit-shop="${esc(g.n)}">+ любимые категории и товары</button>`; }
     const act=(o&&o.deals||[]).filter(dealActive);
     const dealsHTML = act.length ? `<div class="favs"><button type="button" class="fav-h" data-edit-shop="${esc(g.n)}">Акции</button><div class="fchips">${act.map(x=>`<span class="fchip sale">${esc(x.n)} <b>−${fmtP(x.d)}</b>${x.until?` <small>до ${esc(fmtDay(x.until))}</small>`:""}</span>`).join("")}</div></div>` : "";
-    return `<li class="shop"><div class="shop-h"><strong>${esc(g.n)}</strong></div>${own}${favs}${dealsHTML}${offers}</li>`;
+    // свой магазин — вся рамка нажимается и открывает его настройки
+    const tap = o ? ` data-edit-shop="${esc(g.n)}" role="button" tabindex="0" aria-label="Изменить ${esc(g.n)}"` : "";
+    return `<li class="shop${o?" tap":""}"${tap}><div class="shop-h"><strong>${esc(g.n)}</strong></div>${own}${favs}${dealsHTML}${offers}</li>`;
 }
 $("#shopQ").addEventListener("input",renderShops);
 $("#shopList").addEventListener("click",e=>{
-  const ed=e.target.closest("[data-edit-shop]"); if(ed) return openShop(ed.dataset.editShop);
+  // сначала то, что внутри рамки (предложение банка, «добавить»), потом сама рамка магазина
   const o=e.target.closest(".offer[data-card]"); if(o) return openBankOffer(o.dataset.shop,o.dataset.card);
   const n=e.target.closest("[data-newshop]"); if(n) return openShop(n.dataset.newshop,true);
+  const ed=e.target.closest("[data-edit-shop]"); if(ed) return openShop(ed.dataset.editShop);
+});
+$("#shopList").addEventListener("keydown",e=>{
+  if((e.key==="Enter"||e.key===" ") && e.target.matches(".shop.tap")){ e.preventDefault(); openShop(e.target.dataset.editShop); }
+});
+// нажатие на рамку магазина: от пальца расходится затемнение
+$("#shopList").addEventListener("pointerdown",e=>{
+  const li=e.target.closest(".shop.tap"); if(!li || e.target.closest(".offer[data-card]")) return;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r=li.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top;
+  const size=2*Math.hypot(Math.max(x,r.width-x), Math.max(y,r.height-y));
+  const rip=document.createElement("span"); rip.className="ripple";
+  rip.style.cssText=`left:${x-size/2}px;top:${y-size/2}px;width:${size}px;height:${size}px`;
+  li.appendChild(rip);
+  const t0=performance.now();
+  const end=()=>{ removeEventListener("pointerup",end); removeEventListener("pointercancel",end);
+    setTimeout(()=>{ rip.classList.add("out"); setTimeout(()=>rip.remove(),350); }, Math.max(0,250-(performance.now()-t0))); };
+  addEventListener("pointerup",end); addEventListener("pointercancel",end);
 });
 // добавить / изменить магазин: название → карта магазина подставляется сама
 function openShop(name="", isNew){
