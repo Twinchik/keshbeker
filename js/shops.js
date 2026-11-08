@@ -15,11 +15,27 @@ $("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-vie
   // перезапускаем анимацию иконки даже при повторном нажатии
   b.classList.remove("anim"); void b.offsetWidth; b.classList.add("anim");
   b.addEventListener("animationend",()=>b.classList.remove("anim"),{once:true});
-  const changed=b.dataset.view!==view;
-  setView(b.dataset.view);
-  if(changed){ const els = view==="shops" ? [$("#shopsView")] : [...document.querySelectorAll("#cardsView > *")];
-    els.forEach(el=>{ el.classList.remove("viewin"); void el.offsetWidth; el.classList.add("viewin"); el.addEventListener("animationend",()=>el.classList.remove("viewin"),{once:true}); }); }
+  if(b.dataset.view===(wantView||view)) return;
+  switchView(b.dataset.view);
 });
+// Плавная смена раздела как в iOS-приложениях («fade through»): старый экран быстро гаснет до фона
+// (~0.1 с), на мгновение остаётся пустой фон, затем новый экран проявляется (~0.22 с). Плашка меню едет сразу.
+const viewEls = v => v==="shops" ? [$("#shopsView")] : [...document.querySelectorAll("#cardsView > *")];
+let viewSwitch = 0, wantView = null;
+function switchView(v){
+  const my = ++viewSwitch; wantView = v;
+  $("#viewTabs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===v));
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ wantView = null; setView(v); return; }
+  const old = viewEls(view);
+  old.forEach(el=>el.getAnimations().forEach(a=>a.cancel()));
+  const outs = old.map(el=>el.animate([{opacity:getComputedStyle(el).opacity},{opacity:0}],{duration:110,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
+  Promise.all(outs.map(a=>a.finished.catch(()=>{}))).then(()=>{
+    if(my!==viewSwitch) return;
+    wantView = null; setView(v);
+    outs.forEach(a=>a.cancel());
+    viewEls(v).forEach(el=>el.animate([{opacity:0},{opacity:1}],{duration:220,delay:40,easing:"cubic-bezier(0,0,.2,1)",fill:"backwards"}));
+  });
+}
 // Карты лояльности магазинов: у сети своя карта, банковские тут не участвуют.
 // "" — у сети нет своей карты. Название можно поправить вручную при добавлении.
 const LOYALTY={
