@@ -131,6 +131,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
   100%{scale:1;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}}
 .seg.moving button[aria-selected="true"]{animation:glassMag .34s cubic-bezier(.4,0,.2,1)}
 @media (prefers-reduced-motion:reduce){.seg.ready .seg-pill{transition:none}.seg.moving .seg-pill,.seg.moving button{animation:none}}
+#authTabs,#edSeg{border-radius:999px;padding:4px;gap:4px}
+#authTabs button,#edSeg button,#authTabs .seg-pill,#edSeg .seg-pill{border-radius:999px}
+#authTabs .seg-pill,#edSeg .seg-pill{top:4px;bottom:4px}
 .seg button small{font-weight:500;font-size:12px}
 .seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .nextbox{border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
