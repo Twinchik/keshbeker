@@ -44,11 +44,15 @@ syncThemeUI();
 // свежая версия сайта при каждом открытии (см. sw.js)
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 
-// «стеклянное» нажатие на кнопки (как в iOS): кнопка чуть раздувается и вокруг вспыхивает тонкая каёмка
+// Liquid Glass при нажатии: кнопка раздувается, в месте касания светится, и чуть тянется за пальцем
 document.addEventListener("pointerdown", e => {
   const b = e.target.closest(".btn"); if(!b || b.disabled) return;
-  b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
-  clearTimeout(b._pop); b._pop = setTimeout(() => b.classList.remove("pop"), 460);
+  const r = b.getBoundingClientRect();
+  const at = ev => { b.style.setProperty("--x", (ev.clientX - r.left) + "px"); b.style.setProperty("--y", (ev.clientY - r.top) + "px"); };
+  at(e); b.classList.add("down");
+  const mv = ev => { at(ev); const dx = Math.max(-4, Math.min(4, (ev.clientX - e.clientX) / 8)), dy = Math.max(-3, Math.min(3, (ev.clientY - e.clientY) / 8)); b.style.translate = `${dx}px ${dy}px`; };
+  const up = () => { b.classList.remove("down"); b.style.translate = ""; removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); };
+  addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);
 });
 
 // переключатели .seg: одна плашка выбора, которая переезжает к нажатой кнопке «жидким стеклом»

@@ -32,11 +32,30 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .brand{display:flex;flex-direction:column;gap:2px}
 .brand h1{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0;line-height:1.1}
 .brand span{color:var(--muted);font-size:13px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.btn.ghost{background:transparent}
-.btn.danger{color:#d23c2f;border-color:color-mix(in srgb,#d23c2f 35%,var(--line))}
-.btn.danger.armed{background:#d23c2f;color:#fff;border-color:#d23c2f}
+/* кнопки в стиле Liquid Glass (как в iOS 26): стекло размывает и насыщает то, что под ним, по кромке — блик
+   (сверху-слева ярче, снизу-справа слабее). Главные кнопки сплошные, но с глянцем. При нажатии кнопка
+   пружинисто раздувается и светится там, где лежит палец (см. theme.js) */
+:root{--g-tint:rgba(255,255,255,.45);--g-rim:rgba(255,255,255,.95);--g-rim2:rgba(255,255,255,.4);--g-edge:rgba(0,0,0,.09);--g-shadow:0 4px 14px rgba(0,0,0,.10);--g-hot:rgba(255,255,255,.8)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--g-tint:rgba(255,255,255,.07);--g-rim:rgba(255,255,255,.5);--g-rim2:rgba(255,255,255,.12);--g-edge:rgba(255,255,255,.10);--g-shadow:0 4px 14px rgba(0,0,0,.4);--g-hot:rgba(255,255,255,.26)}}
+:root[data-theme="dark"]{--g-tint:rgba(255,255,255,.07);--g-rim:rgba(255,255,255,.5);--g-rim2:rgba(255,255,255,.12);--g-edge:rgba(255,255,255,.10);--g-shadow:0 4px 14px rgba(0,0,0,.4);--g-hot:rgba(255,255,255,.26)}
+.btn{position:relative;isolation:isolate;border:0;border-radius:999px;padding:10px 15px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--ink);
+  background:var(--g-tint);-webkit-backdrop-filter:blur(10px) saturate(1.8);backdrop-filter:blur(10px) saturate(1.8);box-shadow:var(--g-shadow);
+  -webkit-tap-highlight-color:transparent;--x:50%;--y:50%;transition:scale .45s cubic-bezier(.3,1.6,.4,1),translate .45s cubic-bezier(.3,1.6,.4,1)}
+.btn::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;
+  box-shadow:inset 0 0 0 1px var(--g-edge),inset 1.5px 1.5px 1px -.5px var(--g-rim),inset -1px -1.5px 1px -.5px var(--g-rim2),inset 0 0 10px var(--g-rim2)}
+.btn::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:-1;opacity:0;
+  background:radial-gradient(70px 70px at var(--x) var(--y),var(--g-hot),transparent 70%);transition:opacity .35s ease}
+.btn.down{scale:1.08 1.1}
+.btn.down::after{opacity:1;transition:opacity .08s}
+.btn.primary{background:var(--ink);color:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}
+.btn.primary::before{background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%);box-shadow:inset 1.5px 1.5px 1px -.5px rgba(255,255,255,.55),inset -1px -1.5px 1px -.5px rgba(255,255,255,.18)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary::before{background:linear-gradient(180deg,rgba(255,255,255,.5),transparent 60%);box-shadow:inset 1.5px 1.5px 1px -.5px #fff,inset -1px -1.5px 1px -.5px rgba(0,0,0,.15)}}
+:root[data-theme="dark"] .btn.primary::before{background:linear-gradient(180deg,rgba(255,255,255,.5),transparent 60%);box-shadow:inset 1.5px 1.5px 1px -.5px #fff,inset -1px -1.5px 1px -.5px rgba(0,0,0,.15)}
+.btn.primary::after{--g-hot:rgba(255,255,255,.35)}
+.btn.danger{color:#e2483a}
+.btn.danger.armed{background:#d23c2f;color:#fff;-webkit-backdrop-filter:none;backdrop-filter:none}
+.btn.danger.armed::before{background:linear-gradient(180deg,rgba(255,255,255,.22),transparent 55%);box-shadow:inset 1.5px 1.5px 1px -.5px rgba(255,255,255,.6),inset -1px -1.5px 1px -.5px rgba(255,255,255,.2)}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}.btn.down{scale:1}}
 
 .hdr-r{display:flex;align-items:center;gap:8px}
 .avatar{width:38px;height:38px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);padding:0;overflow:hidden;background:var(--surface-2);flex:none}
@@ -103,16 +122,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
 .sync.off::before{background:var(--warn)}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
-/* «стеклянное» нажатие: кнопка раздувается, вокруг вспыхивает каёмка и гаснет */
-.btn,.seg button{position:relative;-webkit-tap-highlight-color:transparent}
-.btn.pop{animation:glassPop .42s cubic-bezier(.3,.7,.3,1)}
-.btn.pop::after{content:"";position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;
-  box-shadow:0 0 0 1px var(--pop-rim,rgba(0,0,0,.2)),inset 0 1px 1px rgba(255,255,255,.6);animation:glassRim .42s ease-out forwards}
-@keyframes glassPop{0%{scale:1}28%{scale:1.06 1.12}100%{scale:1}}
-@keyframes glassRim{0%{opacity:0}22%{opacity:1}65%{opacity:.7}100%{opacity:0}}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pop-rim:rgba(255,255,255,.55)}}
-:root[data-theme="dark"]{--pop-rim:rgba(255,255,255,.55)}
-@media (prefers-reduced-motion:reduce){.btn.pop,.btn.pop::after{animation:none}}
+.seg button{position:relative;-webkit-tap-highlight-color:transparent}
 .seg button{border:0;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px;color:var(--muted);display:flex;flex-direction:column;align-items:center;line-height:1.2}
 /* переключатели «Сейчас/Следующий», «Вход/Регистрация» и т.п.: плашка выбора ездит, как в меню «Карты/Магазины» —
    на время переезда становится прозрачной стеклянной линзой с каёмкой */
