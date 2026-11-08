@@ -46,7 +46,34 @@ if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch
 
 // «стеклянное» нажатие на кнопки (как в iOS): кнопка чуть раздувается и вокруг вспыхивает тонкая каёмка
 document.addEventListener("pointerdown", e => {
-  const b = e.target.closest(".btn, .seg button"); if(!b || b.disabled) return;
+  const b = e.target.closest(".btn"); if(!b || b.disabled) return;
   b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop");
   clearTimeout(b._pop); b._pop = setTimeout(() => b.classList.remove("pop"), 460);
 });
+
+// переключатели .seg: одна плашка выбора, которая переезжает к нажатой кнопке «жидким стеклом»
+function placeSeg(seg, animate){
+  let pill = seg.querySelector(":scope > .seg-pill");
+  if(!pill){ pill = document.createElement("span"); pill.className = "seg-pill"; pill.setAttribute("aria-hidden","true"); seg.prepend(pill); }
+  const sel = seg.querySelector(':scope > button[aria-selected="true"]');
+  if(!sel || !sel.offsetWidth){ seg.classList.remove("ready"); seg._sel = null; return; }
+  pill.style.width = sel.offsetWidth + "px";
+  pill.style.transform = `translateX(${sel.offsetLeft}px)`;
+  if(animate && seg._sel && seg._sel !== sel && seg.classList.contains("ready")){
+    seg.classList.remove("moving"); void seg.offsetWidth; seg.classList.add("moving");
+    clearTimeout(seg._mv); seg._mv = setTimeout(() => seg.classList.remove("moving"), 400);
+  }
+  seg._sel = sel;
+  if(!seg.classList.contains("ready")){ void pill.offsetWidth; seg.classList.add("ready"); }
+}
+const segRO = new ResizeObserver(es => es.forEach(e => placeSeg(e.target, false)));
+function watchSegs(root){
+  (root.matches?.(".seg") ? [root] : []).concat([...(root.querySelectorAll?.(".seg") || [])]).forEach(seg => {
+    if(seg._watched) return; seg._watched = true; segRO.observe(seg); placeSeg(seg, false);
+  });
+}
+new MutationObserver(ms => ms.forEach(m => {
+  if(m.type === "attributes"){ const seg = m.target.parentElement; if(seg?.classList.contains("seg") && m.target.getAttribute("aria-selected") === "true") placeSeg(seg, true); }
+  else m.addedNodes.forEach(n => n.nodeType === 1 && watchSegs(n));
+})).observe(document.body, { subtree:true, childList:true, attributes:true, attributeFilter:["aria-selected"] });
+watchSegs(document.body);
