@@ -133,14 +133,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .ph-btns label.btn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
 @media (max-width:400px){.ph{grid-template-columns:96px 1fr}}
 /* нижняя панель разделов, как в приложении */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:400;display:flex;justify-content:center;gap:4px;
-  padding:6px 16px calc(6px + env(safe-area-inset-bottom,0px));
-  background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line)}
-.tabs button{flex:1;max-width:220px;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;font-size:12px;font-weight:600;border-radius:12px}
-.tabs button[aria-selected="true"]{color:var(--accent)}
+/* нижнее меню — «таблетка» с закруглённой рамкой, выбранный раздел подсвечен овалом */
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:400;
+  display:flex;width:min(360px,calc(100% - 32px));padding:5px;border-radius:999px;
+  background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.18)}
+.tabs::before{content:"";position:absolute;top:5px;bottom:5px;left:5px;width:calc(50% - 5px);border-radius:999px;
+  background:color-mix(in srgb,var(--ink) 10%,transparent);transition:transform .35s cubic-bezier(.3,.7,.3,1)}
+.tabs:has(button[data-view="shops"][aria-selected="true"])::before{transform:translateX(100%)}
+.tabs button{position:relative;z-index:1;flex:1;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;font-size:12px;font-weight:600;border-radius:999px;transition:color .2s}
+.tabs button[aria-selected="true"]{color:var(--ink)}
 .tabs button{-webkit-tap-highlight-color:transparent}
 .tabs button:active,.tabs button:focus:not(:focus-visible){background:transparent;outline:none}
-body:has(#viewTabs:not([hidden])){padding-bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+body:has(#viewTabs:not([hidden])){padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .shops{display:flex;flex-direction:column;gap:12px}
 .q2{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:13px 14px 13px 42px;font:inherit;font-size:16px;color:var(--ink)}
 .shoplist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
@@ -217,7 +222,7 @@ button,a,label,.card{touch-action:manipulation}
 /* плавное появление раздела */
 .viewin{animation:viewIn .32s cubic-bezier(.2,.8,.2,1)}
 @keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.tabs button.anim svg,.viewin{animation:none}}
+@media (prefers-reduced-motion:reduce){.tabs button.anim svg,.viewin{animation:none}.tabs::before{transition:none}}
 /* экран загрузки: карта подпрыгивает */
 #splash{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;transition:opacity .35s ease,visibility .35s}
 #splash.out{opacity:0;visibility:hidden;pointer-events:none}
