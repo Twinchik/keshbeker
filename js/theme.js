@@ -66,7 +66,11 @@ function glassSwitch(root){
   let pill = root.querySelector(":scope > .gpill");
   if(!pill){ pill = document.createElement("span"); pill.className = "gpill seg-pill"; pill.setAttribute("aria-hidden","true"); root.prepend(pill); }
   const isTabs = root.classList.contains("tabs");
-  const LIFT = isTabs ? [0.14, 0.42] : [0.07, 0.28];          // насколько раздувается поднятая линза (ширина, высота)
+  // параметры как у системного переключателя iOS 26: линза поднимается до ~×1.12, переезд — пружина
+  // response 0.5 с, затухание 0.82 (SwiftUI .smooth), за пальцем — response 0.16 с; растяжение по скорости — не больше 6 %
+  const LIFT = isTabs ? 0.12 : 0.07;
+  const spring = (response, damping) => [(2 * Math.PI / response) ** 2, 4 * Math.PI * damping / response];
+  const MOVE = spring(0.5, 0.82), FOLLOW = spring(0.16, 1), LIFTS = spring(0.32, 0.86);
   const btns = () => [...root.querySelectorAll(":scope > button")];
   let x = 0, v = 0, tx = 0, w = 0, tw = 0, l = 0, lv = 0, pressed = false, drag = null, raf = 0, last = 0, placed = false;
   const selBtn = () => btns().find(b => b.getAttribute("aria-selected") === "true");
@@ -77,27 +81,27 @@ function glassSwitch(root){
     kick(); return true;
   }
   function draw(){
-    const sp = Math.min(Math.abs(v) / 2200, 0.22);            // растяжение от скорости
-    const sx = 1 + l * LIFT[0] + sp, sy = 1 + l * LIFT[1] - sp * 0.7;
+    const sp = Math.min(Math.abs(v) / 6000, 0.06);            // лёгкое растяжение по ходу движения
+    const sx = 1 + l * LIFT + sp, sy = 1 + l * LIFT - sp * 0.5;
     pill.style.width = w + "px";
     pill.style.transform = `translateX(${x}px) scale(${sx},${sy})`;
     pill.style.setProperty("--l", l.toFixed(3));
     const c = x + w / 2;
     btns().forEach(b => {                                        // «лупа»: буквы под линзой чуть крупнее
       const d = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c) / b.offsetWidth;
-      const m = 1 + 0.1 * l * Math.max(0, 1 - d);
+      const m = 1 + 0.06 * l * Math.max(0, 1 - d);
       b.style.scale = m > 1.001 ? m.toFixed(3) : "";
     });
   }
   function step(t){
     const dt = Math.min(0.032, (t - (last || t)) / 1000) || 0.016; last = t;
     const goal = drag ? drag.x : tx;
-    const k = drag ? 900 : 330, c = drag ? 50 : 24;            // пружина: при перетаскивании жёстче, при отпускании мягче, с перелётом
+    const [k, c] = drag ? FOLLOW : MOVE;
     v += (k * (goal - x) - c * v) * dt; x += v * dt;
-    w += (tw - w) * Math.min(1, dt * 18);
+    w += (tw - w) * Math.min(1, dt * 10);
     const moving = Math.abs(goal - x) > 0.5 || Math.abs(v) > 15;
     const lt = (pressed || moving) ? 1 : 0;
-    lv += (420 * (lt - l) - 30 * lv) * dt; l += lv * dt; l = Math.max(0, Math.min(1.08, l));
+    lv += (LIFTS[0] * (lt - l) - LIFTS[1] * lv) * dt; l += lv * dt; l = Math.max(0, Math.min(1.04, l));
     if(!moving && !pressed && Math.abs(l) < 0.01 && Math.abs(lv) < 0.05){ x = tx; v = 0; l = 0; lv = 0; draw(); raf = 0; last = 0; return; }
     draw(); raf = requestAnimationFrame(step);
   }
