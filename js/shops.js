@@ -5,16 +5,12 @@
 let view="cards";
 function setView(v){
   view=v;
-  $("#viewTabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",(b.dataset.view||b.dataset.cv)===v));
+  $("#viewTabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v));
   $("#cardsView").style.display = v==="cards" ? "contents" : "none";
   $("#shopsView").hidden = v!=="shops";
   $("#addBtn").innerHTML = v==="cards" ? '<span aria-hidden="true">+</span> Карта' : '<span aria-hidden="true">+</span> Магазин';
   if(v==="shops") renderShops(); else render();
 }
-// копия кнопок меню внутри линзы: при переключении она показывается увеличенной — эффект лупы
-(()=>{ const track=$("#viewTabs .lens-track"); if(!track) return;
-  $("#viewTabs").querySelectorAll(":scope > button").forEach(b=>{ const c=b.cloneNode(true); c.dataset.cv=c.dataset.view; delete c.dataset.view;
-    c.removeAttribute("role"); c.removeAttribute("id"); c.tabIndex=-1; track.appendChild(c); }); })();
 $("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-view]"); if(!b) return;
   // перезапускаем анимацию иконки даже при повторном нажатии
   b.classList.remove("anim"); void b.offsetWidth; b.classList.add("anim");
