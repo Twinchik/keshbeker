@@ -106,7 +106,8 @@ $("#acctBtn").addEventListener("click",()=>{
   </div>`;
   document.body.appendChild(s);
   $("#acctName").textContent = account.synced ? (v?.email||"Твой аккаунт") : "Гость";
-  $("#acctSub").textContent = account.synced ? "Аккаунт Кешбекера" : "Ты не вошёл в аккаунт";
+  $("#acctSub").textContent = account.synced ? "" : "Ты не вошёл в аккаунт";
+  $("#acctSub").hidden = account.synced;
   fillAvatar($("#bigAv")); wireAvatar(s); refreshInstallUI();
   s.addEventListener("click",e=>{ if(e.target===s||e.target.id==="acctClose") s.remove();
     if(e.target.id==="signOut"){ s.remove(); signOut(); }
