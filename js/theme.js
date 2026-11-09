@@ -163,15 +163,23 @@ function glassSwitch(root){
     const up = ev => {
       removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
       pressed = false;
-      if(drag){
-        const n = nearest(drag.x + w / 2); drag = null; tx = n.offsetLeft;
-        // клик выбранной кнопке, а «случайный» клик после перетаскивания гасим
-        root.addEventListener("click", ce => { if(!ce._gs){ ce.stopPropagation(); ce.preventDefault(); } }, { capture: true, once: true });
-        setTimeout(() => { const ce = new MouseEvent("click", { bubbles: true }); ce._gs = true; n.dispatchEvent(ce); }, 0);
-      } else if(ev.type === "pointercancel"){ const sb = selBtn(); if(sb) tx = sb.offsetLeft; }
+      let pick = null;
+      if(drag){ pick = nearest(drag.x + w / 2); drag = null; }
+      else if(ev.type === "pointerup"){
+        const r = root.getBoundingClientRect();
+        if(ev.clientX >= r.left - 10 && ev.clientX <= r.right + 10 && ev.clientY >= r.top - 20 && ev.clientY <= r.bottom + 20) pick = nearest(rel(ev));
+      }
+      if(pick){
+        // выбираем кнопку сами, по отпусканию пальца. Обычный «клик» браузера тут не годится: если страница
+        // ещё прокручивалась по инерции, айфон тратит касание на остановку прокрутки и клика не присылает —
+        // плашка уезжала, а раздел не переключался
+        tx = pick.offsetLeft;
+        const ce = new MouseEvent("click", { bubbles: true }); ce._gs = true; pick.dispatchEvent(ce);
+      } else { const sb = selBtn(); if(sb) tx = sb.offsetLeft; }
     };
     addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);
   });
+  root.addEventListener("click", e => { if(!e._gs && e.detail > 0 && placed && !reduceMotion.matches){ e.stopPropagation(); e.preventDefault(); } }, true);
   new MutationObserver(() => aim(selBtn())).observe(root, { subtree: true, attributes: true, attributeFilter: ["aria-selected"] });
   new ResizeObserver(() => aim(selBtn(), true)).observe(root);
   aim(selBtn(), true);
