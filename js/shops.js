@@ -18,16 +18,27 @@ $("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-vie
   if(b.dataset.view===(wantView||view)) return;
   switchView(b.dataset.view);
 });
-// Плавная смена раздела как в iOS-приложениях («fade through»): старый экран быстро гаснет до фона
-// (~0.17 с), ~0.08 с держится пустой фон, затем новый экран проявляется (~0.26 с). Плашка меню едет сразу.
-const viewEls = v => v==="shops" ? [$("#shopsView")] : [...document.querySelectorAll("#cardsView > *")];
-let viewSwitch = 0, wantView = null;
+// Плавная смена раздела («fade through»): поверх экрана (под нижним меню) плавно проявляется «шторка» цвета фона —
+// экран затемняется (~0.17 с), под ней меняется раздел, ~0.08 с держится пустой фон, затем шторка растворяется (~0.26 с).
+// Анимируется один простой слой, а не сами разделы: так одинаково плавно в обе стороны и в Safari на айфоне
+// (раньше при переходе «Магазины → Карты» айфон пропускал затемнение и сразу показывал тёмный экран).
+let viewSwitch = 0, wantView = null, curtainAnim = null;
+const curtain = Object.assign(document.createElement("div"), { className: "curtain" });
+curtain.setAttribute("aria-hidden", "true"); document.body.appendChild(curtain);
 function switchView(v){
   const my = ++viewSwitch; wantView = v;
   $("#viewTabs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===v));
-  // гаснет весь экран вместе с шапкой (кроме нижнего меню): затемнение → пауза на тёмном фоне → новый раздел
-  const top = $("header.top");
-  fadeThrough([top, ...viewEls(view)], () => { wantView = null; setView(v); return [top, ...viewEls(v)]; }, () => my === viewSwitch, { out: 170, gap: 80, in: 260 });
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ wantView = null; setView(v); return; }
+  const from = curtainAnim ? +getComputedStyle(curtain).opacity : 0;
+  if(curtainAnim) curtainAnim.cancel();
+  const a = curtainAnim = curtain.animate([{ opacity: from }, { opacity: 1 }], { duration: 170 * (1 - from), easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" });
+  a.finished.then(() => {
+    if(my !== viewSwitch) return;
+    wantView = null; setView(v);
+    const b = curtainAnim = curtain.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 80, easing: "cubic-bezier(0,0,.2,1)", fill: "both" });
+    a.cancel();
+    b.finished.then(() => { if(curtainAnim === b){ b.cancel(); curtainAnim = null; } }).catch(() => {});
+  }).catch(() => {});
 }
 // Карты лояльности магазинов: у сети своя карта, банковские тут не участвуют.
 // "" — у сети нет своей карты. Название можно поправить вручную при добавлении.

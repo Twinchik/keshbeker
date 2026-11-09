@@ -184,6 +184,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 @media (max-width:400px){.ph{grid-template-columns:96px 1fr}}
 /* нижняя панель разделов, как в приложении */
 /* нижнее меню — «таблетка» с закруглённой рамкой, выбранный раздел подсвечен овалом */
+.curtain{position:fixed;inset:0;z-index:390;background:var(--bg);opacity:0;pointer-events:none}
 .tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:400;
   display:flex;width:min(360px,calc(100% - 32px));padding:5px;border-radius:999px;
   background:color-mix(in srgb,var(--surface) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
