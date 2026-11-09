@@ -56,85 +56,119 @@ document.addEventListener("pointerdown", e => {
 });
 
 // Переключатели в стиле Liquid Glass: «Карты/Магазины» (.tabs) и все .seg.
-// Плашка выбора движется на пружине (с небольшим перелётом), а не по таймеру:
-//  • касание — плашка поднимается: становится прозрачной линзой, раздувается, буквы под ней крупнее;
+// Плашка выбора движется на пружине, как системный переключатель iOS 26:
+//  • касание — плашка поднимается: становится прозрачной линзой с бликом, чуть раздувается, буквы под ней крупнее;
 //  • её можно тащить пальцем между кнопками, при отпускании выбирается ближайшая;
-//  • в движении тянется по ходу и сплющивается по высоте, остановилась — опускается и заливается цветом.
+//  • в движении слегка тянется по ходу, остановилась — опускается и снова заливается цветом.
+// Чтобы не было рывков, весь путь пружины после отпускания заранее просчитывается и отдаётся браузеру как
+// готовая анимация (Web Animations). Её рисует видеокарта с частотой экрана, и она не подтормаживает,
+// даже когда в этот момент страница перерисовывает раздел. Покадрово в JS — только пока палец на экране.
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const spring = (response, damping) => [(2 * Math.PI / response) ** 2, 4 * Math.PI * damping / response];
+const SP_MOVE = spring(0.5, 0.82), SP_FOLLOW = spring(0.16, 1), SP_LIFT = spring(0.32, 0.86);
+const SIM_DT = 1 / 120;
 function glassSwitch(root){
   if(root._gs) return; root._gs = true; root.classList.add("gs");
   let pill = root.querySelector(":scope > .gpill");
   if(!pill){ pill = document.createElement("span"); pill.className = "gpill seg-pill"; pill.setAttribute("aria-hidden","true"); root.prepend(pill); }
-  const isTabs = root.classList.contains("tabs");
-  // параметры как у системного переключателя iOS 26: линза поднимается до ~×1.12, переезд — пружина
-  // response 0.5 с, затухание 0.82 (SwiftUI .smooth), за пальцем — response 0.16 с; растяжение по скорости — не больше 6 %
-  const LIFT = isTabs ? 0.12 : 0.07;
-  const spring = (response, damping) => [(2 * Math.PI / response) ** 2, 4 * Math.PI * damping / response];
-  const MOVE = spring(0.5, 0.82), FOLLOW = spring(0.16, 1), LIFTS = spring(0.32, 0.86);
+  pill.innerHTML = '<i class="gp-fill"></i><i class="gp-glass"></i>';
+  const fill = pill.firstChild, glass = pill.lastChild;
+  const LIFT = root.classList.contains("tabs") ? 0.12 : 0.07;
   const btns = () => [...root.querySelectorAll(":scope > button")];
-  let x = 0, v = 0, tx = 0, w = 0, tw = 0, l = 0, lv = 0, pressed = false, drag = null, raf = 0, last = 0, placed = false;
   const selBtn = () => btns().find(b => b.getAttribute("aria-selected") === "true");
-  // размеры кнопок запоминаем заранее, чтобы не пересчитывать раскладку страницы в каждом кадре (иначе подлагивает)
-  let geo = [];
-  const measure = () => { geo = btns().map(b => ({ b, c: b.offsetLeft + b.offsetWidth / 2, w: b.offsetWidth, m: b._m || 1 })); };
-  function aim(b, instant){
-    if(!b || !b.offsetWidth) return false;
-    measure(); tx = b.offsetLeft; tw = b.offsetWidth;
-    if(instant || !placed || reduceMotion.matches){ x = tx; w = tw; v = 0; placed = true; draw(); return true; }
-    kick(); return true;
+  let geo = [];                                   // размеры кнопок — меряем заранее, не в каждом кадре
+  const measure = () => { geo = btns().map(b => ({ b, c: b.offsetLeft + b.offsetWidth / 2, w: b.offsetWidth })); };
+  let st = { x: 0, v: 0, l: 0, lv: 0 }, tx = 0, w = 0, pressed = false, drag = null, raf = 0, last = 0, placed = false, wa = null;
+
+  // как выглядит плашка в данном состоянии
+  function look(s){
+    const sp = Math.min(Math.abs(s.v) / 6000, 0.06), l = Math.max(0, Math.min(1, s.l));
+    const c = s.x + w / 2;
+    return {
+      transform: `translateX(${s.x.toFixed(2)}px) scale(${(1 + s.l * LIFT + sp).toFixed(4)},${(1 + s.l * LIFT - sp * 0.5).toFixed(4)})`,
+      fill: 1 - l, glass: l,
+      scales: geo.map(g => 1 + 0.06 * l * Math.max(0, 1 - Math.abs(g.c - c) / g.w))
+    };
   }
   function draw(){
-    const sp = Math.min(Math.abs(v) / 6000, 0.06);            // лёгкое растяжение по ходу движения
-    const sx = 1 + l * LIFT + sp, sy = 1 + l * LIFT - sp * 0.5;
-    pill.style.width = w + "px";
-    pill.style.transform = `translateX(${x}px) scale(${sx},${sy})`;
-    pill.style.setProperty("--l", l.toFixed(3));
-    const c = x + w / 2;
-    geo.forEach(g => {                                           // «лупа»: буквы под линзой чуть крупнее
-      const d = Math.abs(g.c - c) / g.w;
-      const m = Math.round((1 + 0.06 * l * Math.max(0, 1 - d)) * 500) / 500;
-      if(m !== g.m){ g.m = g.b._m = m; g.b.style.scale = m > 1 ? m : ""; }
-    });
+    const k = look(st);
+    pill.style.width = w + "px"; pill.style.transform = k.transform;
+    fill.style.opacity = k.fill; glass.style.opacity = k.glass;
+    geo.forEach((g, i) => { g.b.style.scale = k.scales[i] > 1.001 ? k.scales[i].toFixed(3) : ""; });
   }
+  // один шаг пружины
+  function physics(s, dt, goal, hold, [k, c]){
+    s.v += (k * (goal - s.x) - c * s.v) * dt; s.x += s.v * dt;
+    const moving = Math.abs(goal - s.x) > 1.5 || Math.abs(s.v) > 40;
+    s.lv += (SP_LIFT[0] * ((hold || moving) ? 1 : 0) - SP_LIFT[0] * s.l - SP_LIFT[1] * s.lv) * dt; s.l += s.lv * dt;
+    s.l = Math.max(0, Math.min(1.04, s.l));
+    return moving;
+  }
+  // где сейчас плашка, если идёт заранее посчитанная анимация
+  function stopAnim(){
+    if(!wa) return;
+    const i = Math.min(wa.frames.length - 1, Math.max(0, Math.floor((performance.now() - wa.t0) / 1000 / SIM_DT)));
+    st = { ...wa.frames[i] }; wa.anims.forEach(a => a.cancel()); wa = null; draw();
+  }
+  // просчитать путь до места и запустить готовой анимацией
+  function play(){
+    stopAnim(); if(raf){ cancelAnimationFrame(raf); raf = 0; }
+    const frames = [{ ...st }], s = { ...st };
+    for(let n = 0; n < 240; n++){
+      const moving = physics(s, SIM_DT, tx, false, SP_MOVE);
+      frames.push({ ...s });
+      if(!moving && s.l < 0.004 && Math.abs(s.lv) < 0.05) break;
+    }
+    st = { x: tx, v: 0, l: 0, lv: 0 };
+    if(frames.length < 3 || reduceMotion.matches){ draw(); return; }
+    const looks = frames.map(look), dur = (frames.length - 1) * SIM_DT * 1000;
+    draw();                                       // конечное состояние — под анимацией
+    const opt = { duration: dur, easing: "linear" };
+    const anims = [
+      pill.animate(looks.map(k => ({ transform: k.transform })), opt),
+      fill.animate(looks.map(k => ({ opacity: k.fill })), opt),
+      glass.animate(looks.map(k => ({ opacity: k.glass })), opt),
+      ...geo.map((g, i) => g.b.animate(looks.map(k => ({ scale: String(k.scales[i]) })), opt))
+    ];
+    const me = wa = { anims, frames, t0: performance.now() };
+    anims[0].finished.then(() => { if(wa === me) wa = null; }).catch(() => {});
+  }
+  // покадрово — только пока палец на кнопке или тащит плашку
   function step(t){
     const dt = Math.min(0.032, (t - (last || t)) / 1000) || 0.016; last = t;
-    const goal = drag ? drag.x : tx;
-    const [k, c] = drag ? FOLLOW : MOVE;
-    v += (k * (goal - x) - c * v) * dt; x += v * dt;
-    w += (tw - w) * Math.min(1, dt * 10);
-    const moving = Math.abs(goal - x) > 0.5 || Math.abs(v) > 15;
-    const lt = (pressed || moving) ? 1 : 0;
-    lv += (LIFTS[0] * (lt - l) - LIFTS[1] * lv) * dt; l += lv * dt; l = Math.max(0, Math.min(1.04, l));
-    if(!moving && !pressed && Math.abs(l) < 0.01 && Math.abs(lv) < 0.05){ x = tx; v = 0; l = 0; lv = 0; draw(); raf = 0; last = 0; return; }
+    if(!pressed && !drag){ raf = 0; last = 0; play(); return; }
+    physics(st, dt, drag ? drag.x : tx, true, drag ? SP_FOLLOW : SP_MOVE);
     draw(); raf = requestAnimationFrame(step);
   }
-  function kick(){ if(!raf){ last = 0; raf = requestAnimationFrame(step); } }
+  function live(){ stopAnim(); if(!raf){ last = 0; raf = requestAnimationFrame(step); } }
+  function aim(b, instant){
+    if(!b || !b.offsetWidth) return;
+    measure(); tx = b.offsetLeft; w = b.offsetWidth;
+    if(instant || !placed || reduceMotion.matches){ stopAnim(); st = { x: tx, v: 0, l: 0, lv: 0 }; placed = true; draw(); return; }
+    if(pressed || drag) live(); else play();
+  }
   function nearest(px){ let best = null, bd = 1e9; geo.forEach(g => { const d = Math.abs(g.c - px); if(d < bd){ bd = d; best = g.b; } }); return best; }
   const rel = e => e.clientX - root.getBoundingClientRect().left;
   root.addEventListener("pointerdown", e => {
     const b = e.target.closest("button"); if(!b || b.parentElement !== root || reduceMotion.matches || !placed) return;
-    pressed = true; drag = null; root._start = rel(e); root._moved = false; measure();
-    const lo = geo[0].c - geo[0].w / 2, hi = geo.at(-1).c + geo.at(-1).w / 2;
-    if(b !== selBtn()){ tx = b.offsetLeft; tw = b.offsetWidth; }  // линза сразу едет туда, куда нажали
-    kick();
+    measure(); pressed = true; drag = null;
+    const start = rel(e), lo = geo[0].c - geo[0].w / 2, hi = geo.at(-1).c + geo.at(-1).w / 2;
+    tx = b.offsetLeft;                            // линза сразу едет туда, куда нажали
+    live();
     const mv = ev => {
       const px = rel(ev);
-      if(!root._moved && Math.abs(px - root._start) < 6) return;
-      root._moved = true;
+      if(!drag && Math.abs(px - start) < 6) return;
       drag = { x: Math.max(lo - 8, Math.min(hi - w + 8, px - w / 2)) };
-      const n = nearest(px); tw = n.offsetWidth; kick();
     };
     const up = ev => {
       removeEventListener("pointermove", mv); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
       pressed = false;
       if(drag){
-        const n = nearest(drag.x + w / 2); drag = null;
+        const n = nearest(drag.x + w / 2); drag = null; tx = n.offsetLeft;
         // клик выбранной кнопке, а «случайный» клик после перетаскивания гасим
         root.addEventListener("click", ce => { if(!ce._gs){ ce.stopPropagation(); ce.preventDefault(); } }, { capture: true, once: true });
         setTimeout(() => { const ce = new MouseEvent("click", { bubbles: true }); ce._gs = true; n.dispatchEvent(ce); }, 0);
-        tx = n.offsetLeft; tw = n.offsetWidth;
-      } else if(ev.type === "pointercancel"){ aim(selBtn()); }
-      kick();
+      } else if(ev.type === "pointercancel"){ const sb = selBtn(); if(sb) tx = sb.offsetLeft; }
     };
     addEventListener("pointermove", mv); addEventListener("pointerup", up); addEventListener("pointercancel", up);
   });
