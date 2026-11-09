@@ -159,7 +159,7 @@ function openPhotoEditor(file){
   return new Promise(async resolve=>{
     let cv;
     try{ cv=await loadBitmap(file); }catch{ toast("Не получилось открыть фото. Попробуй другое."); return resolve(null); }
-    let corners=detectCorners(cv), level=1, mode="photo", busy=0, result=null;
+    let corners=detectCorners(cv), level=0, mode="photo", busy=0, result=null;
     const s=document.createElement("div"); s.className="scrim"; s.id="phScrim"; s.style.zIndex=700;
     s.innerHTML=`<div class="sheet pe" role="dialog" aria-modal="true" aria-label="Обработка фото">
       <h3>Обработка фото</h3>
@@ -167,7 +167,6 @@ function openPhotoEditor(file){
       <div class="pe-stage" id="peStage"><canvas id="peSrc"></canvas><svg id="peQuad"></svg>${[0,1,2,3].map(i=>`<button type="button" class="pe-h" data-h="${i}" aria-label="Угол ${i+1}"></button>`).join("")}</div>
       <div class="pe-row"><button type="button" class="btn" id="peRot">↻ Повернуть</button><button type="button" class="btn ghost" id="peAuto">Найти карту заново</button></div>
       <div class="fl"><span class="lab">Вид</span><div class="seg" id="peMode"><button type="button" data-m="photo" aria-selected="true">Фото</button><button type="button" data-m="colors" aria-selected="false">Цвета карты</button></div></div>
-      <div class="fl" id="peLevelBox"><span class="lab">Убрать блики и грязь</span><div class="seg three" id="peLevel"><button type="button" data-l="0" aria-selected="false">Нет</button><button type="button" data-l="1" aria-selected="true">Мягко</button><button type="button" data-l="2" aria-selected="false">Сильно</button></div></div>
       <div class="fl"><span class="lab">Так карта будет выглядеть</span><div class="pe-prev" id="pePrev"><span class="pe-wait">Обрабатываю…</span></div></div>
       <div class="acts"><div></div><div><button type="button" class="btn ghost" id="peCancel">Отмена</button><button type="button" class="btn primary" id="peOk">Готово</button></div></div>
     </div>`;
@@ -212,8 +211,7 @@ function openPhotoEditor(file){
     $("#peRot").onclick=()=>{ cv=rotateCanvas(cv); corners=detectCorners(cv); drawStage(); update(); };
     $("#peAuto").onclick=()=>{ corners=detectCorners(cv); drawHandles(); update(); };
     const seg=(id,attr,fn)=>$(id).onclick=e=>{ const b=e.target.closest(`[${attr}]`); if(!b) return; $(id).querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x===b)); fn(b.getAttribute(attr)); update(); };
-    seg("#peMode","data-m",m=>{ mode=m; $("#peLevelBox").hidden = m==="colors"; });
-    seg("#peLevel","data-l",l=>{ level=+l; });
+    seg("#peMode","data-m",m=>{ mode=m; });
     const close=v=>{ s.remove(); resolve(v); };
     $("#peCancel").onclick=()=>close(null);
     $("#peOk").onclick=()=>{ if(!result) return; close(result); };
