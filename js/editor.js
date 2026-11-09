@@ -41,10 +41,9 @@ function openEditor(card, startTab="cur"){
   // быстро гаснут, меняются и мягко проявляются (кнопка «Скопировать из текущего» не выскакивает резко)
   let tabFade=0, tab0;
   const setTab=(t,first)=>{ if(!first && t===tab0) return; tab0=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
-    const els=[$("#edTabNote"),$("#edRows"),$("#edAdd").parentElement];
     if(first){ applyTab(t); return; }
     const my=++tabFade;
-    fadeThrough(els, () => { applyTab(t); }, () => my===tabFade);
+    curtainSwap($("#edSeg").parentElement, $("#edTabNote"), () => applyTab(t), () => my===tabFade);
   };
   const applyTab=t=>{ syncRows(); tab=t;
     $("#edTabNote").textContent = t==="cur" ? `Кешбек, который действует сейчас, в ${monthOnly(nowMonth())}.` : `Выбери категории на ${monthOnly(nm)} заранее. 1 ${genMonth(nm)} они сами станут текущими.`;

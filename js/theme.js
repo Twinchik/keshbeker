@@ -184,20 +184,23 @@ function watchSwitches(node){
 new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(watchSwitches))).observe(document.body, { childList: true, subtree: true });
 watchSwitches(document.body);
 
-// Плавное исчезновение/появление блоков (разделы, вкладки «Сейчас/Следующий»).
-// Пока блок полупрозрачный, стеклянные кнопки внутри него не могут «видеть» фон и на миг ломаются —
-// поэтому на время анимации стекло в них выключаем (на ровном фоне разницы не видно).
-function fadeThrough(els, swap, isCurrent = () => true, t = { out: 110, gap: 30, in: 220 }){
+// Плавная смена содержимого внутри окна (вкладки «Сейчас/Следующий»): поверх блока, начиная с элемента top,
+// проявляется «шторка» цвета окна, под ней всё меняется, затем шторка растворяется.
+// Сами блоки прозрачность не меняют: Safari на айфоне такие анимации пропускает, а стеклянные кнопки
+// внутри полупрозрачного блока рисует с артефактами.
+function curtainSwap(box, top, swap, isCurrent = () => true, t = { out: 120, gap: 40, in: 220 }){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches){ swap(); return; }
-  els.forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.classList.add("fading"); });
-  const outs = els.map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: t.out, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }));
-  Promise.all(outs.map(a => a.finished.catch(() => {}))).then(() => {
+  let c = box.querySelector(":scope > .box-curtain");
+  if(!c){ c = document.createElement("div"); c.className = "box-curtain"; c.setAttribute("aria-hidden","true"); box.appendChild(c); }
+  c.style.top = (top.offsetTop - 2) + "px";
+  const from = c._a ? +getComputedStyle(c).opacity : 0;
+  c._a?.cancel();
+  const a = c._a = c.animate([{ opacity: from }, { opacity: 1 }], { duration: t.out * (1 - from), easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" });
+  a.finished.then(() => {
     if(!isCurrent()) return;
-    const ins = swap() || els;
-    outs.forEach(a => a.cancel());
-    els.forEach(el => el.classList.remove("fading"));
-    ins.forEach(el => { el.classList.add("fading");
-      const a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: t.in, delay: t.gap, easing: "cubic-bezier(0,0,.2,1)", fill: "backwards" });
-      a.finished.catch(() => {}).then(() => { if(!el.getAnimations().length) el.classList.remove("fading"); }); });
-  });
+    swap();
+    const b = c._a = c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: t.in, delay: t.gap, easing: "cubic-bezier(0,0,.2,1)", fill: "both" });
+    a.cancel();
+    b.finished.then(() => { if(c._a === b){ b.cancel(); c._a = null; } }).catch(() => {});
+  }).catch(() => {});
 }
