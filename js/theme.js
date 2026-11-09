@@ -187,17 +187,17 @@ watchSwitches(document.body);
 // Плавное исчезновение/появление блоков (разделы, вкладки «Сейчас/Следующий»).
 // Пока блок полупрозрачный, стеклянные кнопки внутри него не могут «видеть» фон и на миг ломаются —
 // поэтому на время анимации стекло в них выключаем (на ровном фоне разницы не видно).
-function fadeThrough(els, swap, isCurrent = () => true){
+function fadeThrough(els, swap, isCurrent = () => true, t = { out: 110, gap: 30, in: 220 }){
   if(matchMedia("(prefers-reduced-motion: reduce)").matches){ swap(); return; }
   els.forEach(el => { el.getAnimations().forEach(a => a.cancel()); el.classList.add("fading"); });
-  const outs = els.map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 110, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }));
+  const outs = els.map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: t.out, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" }));
   Promise.all(outs.map(a => a.finished.catch(() => {}))).then(() => {
     if(!isCurrent()) return;
     const ins = swap() || els;
     outs.forEach(a => a.cancel());
     els.forEach(el => el.classList.remove("fading"));
     ins.forEach(el => { el.classList.add("fading");
-      const a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, delay: 30, easing: "cubic-bezier(0,0,.2,1)", fill: "backwards" });
+      const a = el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: t.in, delay: t.gap, easing: "cubic-bezier(0,0,.2,1)", fill: "backwards" });
       a.finished.catch(() => {}).then(() => { if(!el.getAnimations().length) el.classList.remove("fading"); }); });
   });
 }

@@ -19,13 +19,15 @@ $("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-vie
   switchView(b.dataset.view);
 });
 // Плавная смена раздела как в iOS-приложениях («fade through»): старый экран быстро гаснет до фона
-// (~0.1 с), на мгновение остаётся пустой фон, затем новый экран проявляется (~0.22 с). Плашка меню едет сразу.
+// (~0.17 с), ~0.08 с держится пустой фон, затем новый экран проявляется (~0.26 с). Плашка меню едет сразу.
 const viewEls = v => v==="shops" ? [$("#shopsView")] : [...document.querySelectorAll("#cardsView > *")];
 let viewSwitch = 0, wantView = null;
 function switchView(v){
   const my = ++viewSwitch; wantView = v;
   $("#viewTabs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===v));
-  fadeThrough(viewEls(view), () => { wantView = null; setView(v); return viewEls(v); }, () => my === viewSwitch);
+  // гаснет весь экран вместе с шапкой (кроме нижнего меню): затемнение → пауза на тёмном фоне → новый раздел
+  const top = $("header.top");
+  fadeThrough([top, ...viewEls(view)], () => { wantView = null; setView(v); return [top, ...viewEls(v)]; }, () => my === viewSwitch, { out: 170, gap: 80, in: 260 });
 }
 // Карты лояльности магазинов: у сети своя карта, банковские тут не участвуют.
 // "" — у сети нет своей карты. Название можно поправить вручную при добавлении.
