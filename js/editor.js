@@ -45,12 +45,12 @@ function openEditor(card, startTab="cur"){
     const my=++tabFade;
     curtainSwap($("#edSeg").parentElement, $("#edTabNote"), () => applyTab(t), () => my===tabFade);
   };
-  const applyTab=t=>{ syncRows(); tab=t;
+  const applyTab=(t,noSync)=>{ if(!noSync) syncRows(); tab=t;
     $("#edTabNote").textContent = t==="cur" ? `Кешбек, который действует сейчас, в ${monthOnly(nowMonth())}.` : `Выбери категории на ${monthOnly(nm)} заранее. 1 ${genMonth(nm)} они сами станут текущими.`;
     $("#edCopy").hidden = t==="cur"; $("#edClearNext").hidden = t==="cur" || editing.next.draft; drawRows(); };
   $("#edSeg").onclick=e=>{const b=e.target.closest("[data-tab]"); if(b) setTab(b.dataset.tab);};
   $("#edCopy").onclick=()=>{ editing.next.items=(editing.items||[]).map(i=>({...i})); editing.next.draft=false; drawRows(); };
-  $("#edClearNext").onclick=()=>{ editing.next={month:nm,items:[{n:"",p:5},...(editing.items||[]).filter(i=>isBase(i.n)).map(i=>({...i}))],draft:true,cleared:true}; setTab("next",true); };
+  $("#edClearNext").onclick=()=>{ editing.next={month:nm,items:[{n:"",p:5},...(editing.items||[]).filter(i=>isBase(i.n)).map(i=>({...i}))],draft:true,cleared:true}; tab0="next"; applyTab("next",true); };
   setTab(tab,true);
   setTimeout(()=>$("#edBank").focus(),50);
   s.addEventListener("click",e=>{ if(e.target===s) closeEditor(); });
