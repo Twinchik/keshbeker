@@ -139,6 +139,8 @@ function toast(text, act, fn){
   const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status");
   const sp=document.createElement("span"); sp.textContent=text; t.appendChild(sp);
   if(act){ const b=document.createElement("button"); b.type="button"; b.textContent=act; b.onclick=()=>{ t.remove(); fn(); }; t.appendChild(b); }
+  // нажатие по самому уведомлению убирает его сразу (чтобы не мешало нажимать то, что под ним)
+  t.addEventListener("click",e=>{ if(!e.target.closest("button")){ t.remove(); clearTimeout(toastT); } });
   document.body.appendChild(t); toastT=setTimeout(()=>t.remove(),4000);
 }
 function openTrash(){
