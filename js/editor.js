@@ -139,7 +139,7 @@ function toast(text, act, fn){
   const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status");
   const sp=document.createElement("span"); sp.textContent=text; t.appendChild(sp);
   if(act){ const b=document.createElement("button"); b.type="button"; b.textContent=act; b.onclick=()=>{ t.remove(); fn(); }; t.appendChild(b); }
-  document.body.appendChild(t); toastT=setTimeout(()=>t.remove(),6000);
+  document.body.appendChild(t); toastT=setTimeout(()=>t.remove(),4000);
 }
 function openTrash(){
   document.querySelector(".toast")?.remove();
