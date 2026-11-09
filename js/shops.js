@@ -23,18 +23,27 @@ $("#viewTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-vie
 // Анимируется один простой слой, а не сами разделы: так одинаково плавно в обе стороны и в Safari на айфоне
 // (раньше при переходе «Магазины → Карты» айфон пропускал затемнение и сразу показывал тёмный экран).
 let viewSwitch = 0, wantView = null, curtainAnim = null;
+const scrollMem = {};
+// на телефоне прокручивается не окно, а body (см. style.css, pointer:coarse)
+const scroller = () => matchMedia("(pointer:coarse)").matches ? document.body : document.scrollingElement;
 const curtain = Object.assign(document.createElement("div"), { className: "curtain" });
 curtain.setAttribute("aria-hidden", "true"); document.body.appendChild(curtain);
 function switchView(v){
   const my = ++viewSwitch; wantView = v;
   $("#viewTabs").querySelectorAll("button").forEach(x=>x.setAttribute("aria-selected",x.dataset.view===v));
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ wantView = null; setView(v); return; }
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){ wantView = null; const sc = scroller(); scrollMem[view] = sc.scrollTop; setView(v); sc.scrollTop = scrollMem[v] || 0; return; }
   const from = curtainAnim ? +getComputedStyle(curtain).opacity : 0;
   if(curtainAnim) curtainAnim.cancel();
   const a = curtainAnim = curtain.animate([{ opacity: from }, { opacity: 1 }], { duration: 170 * (1 - from), easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" });
   a.finished.then(() => {
     if(my !== viewSwitch) return;
-    wantView = null; setView(v);
+    wantView = null;
+    // у каждого раздела своя прокрутка (как вкладки в iOS): запоминаем, где был старый, новый открываем там,
+    // где его оставили (в первый раз — сверху). Инерцию прокрутки гасим, иначе айфон докручивает новый раздел
+    const sc = scroller(); scrollMem[view] = sc.scrollTop;
+    setView(v);
+    sc.style.overflowY = "hidden"; sc.scrollTop = scrollMem[v] || 0;
+    requestAnimationFrame(() => { sc.style.overflowY = ""; sc.scrollTop = scrollMem[v] || 0; });
     const b = curtainAnim = curtain.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 80, easing: "cubic-bezier(0,0,.2,1)", fill: "both" });
     a.cancel();
     b.finished.then(() => { if(curtainAnim === b){ b.cancel(); curtainAnim = null; } }).catch(() => {});
