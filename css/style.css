@@ -423,8 +423,14 @@ body.reordering{-webkit-user-select:none;user-select:none}
 .h-help{display:flex;align-items:center;gap:10px}
 .qhelp{width:24px;height:24px;flex:none;border-radius:50%;border:1.5px solid var(--muted);background:transparent;color:var(--muted);font-family:inherit;font-weight:700;font-size:13px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,border-color .2s}
 .qhelp[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-.help-note:not([hidden]){animation:helpIn .22s cubic-bezier(0,0,.2,1)}
-@keyframes helpIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+/* всплывающая подсказка (helpPop в theme.js): стекло с размытием фона, тонкая светлая кромка */
+.hpop-catch{position:fixed;inset:0;z-index:800}
+.hpop{position:fixed;display:flex;flex-direction:column;gap:6px;padding:16px 16px 14px;border-radius:22px;color:var(--ink);
+  background:color-mix(in srgb,var(--surface) 72%,transparent);-webkit-backdrop-filter:blur(22px) saturate(1.7);backdrop-filter:blur(22px) saturate(1.7);
+  box-shadow:inset 0 0 0 1px var(--g-edge),inset 1px 1px 1px -.5px var(--g-rim2),0 12px 36px rgba(0,0,0,.28)}
+.hpop strong{font-size:15px}
+.hpop p{margin:0 0 6px;font-size:14px;line-height:1.4;color:var(--muted)}
+.hpop .btn{justify-content:center;width:100%}
 /* обрезка аватарки */
 .crop-stage{position:relative;width:min(300px,100%);aspect-ratio:1;margin:4px auto 0;overflow:hidden;border-radius:16px;background:#000;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 .crop-stage.drag{cursor:grabbing}

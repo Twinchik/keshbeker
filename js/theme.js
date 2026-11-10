@@ -212,3 +212,35 @@ function curtainSwap(box, top, swap, isCurrent = () => true, t = { out: 120, gap
     b.finished.then(() => { if(c._a === b){ b.cancel(); c._a = null; } }).catch(() => {});
   }).catch(() => {});
 }
+
+// Подсказка под кнопкой «?»: стеклянное окошко с заголовком, текстом и «OK», как всплывающие подсказки в iOS.
+// Плавно проявляется у кнопки (лёгкое увеличение), закрывается по «OK» или по нажатию в любое место.
+function helpPop(anchor, title, text){
+  document.querySelector(".hpop-catch")?.remove();
+  const catcher = document.createElement("div"); catcher.className = "hpop-catch";
+  const pop = document.createElement("div"); pop.className = "hpop"; pop.setAttribute("role","dialog"); pop.setAttribute("aria-label", title);
+  pop.innerHTML = `<strong></strong><p></p><button type="button" class="btn">OK</button>`;
+  pop.querySelector("strong").textContent = title; pop.querySelector("p").textContent = text;
+  catcher.appendChild(pop); document.body.appendChild(catcher);
+  const a = anchor.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+  const w = Math.min(300, vw - 32); pop.style.width = w + "px";
+  const left = Math.max(16, Math.min(vw - w - 16, a.left - 44));
+  const h = pop.offsetHeight, below = a.bottom + 8 + h < vh - 16;
+  const top = below ? a.bottom + 8 : Math.max(16, a.top - 8 - h);
+  pop.style.left = left + "px"; pop.style.top = top + "px";
+  pop.style.transformOrigin = `${a.left + a.width / 2 - left}px ${below ? 0 : h}px`;   // растёт из кнопки «?»
+  anchor.setAttribute("aria-expanded", "true");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!reduce) pop.animate([{ opacity: 0, transform: `translateY(${below ? -6 : 6}px) scale(.9)` }, { opacity: 1, transform: "none" }], { duration: 240, easing: "cubic-bezier(.2,.9,.3,1.05)" });
+  let closing = false;
+  const close = () => {
+    if(closing) return; closing = true; anchor.setAttribute("aria-expanded", "false");
+    if(reduce){ catcher.remove(); return; }
+    const an = pop.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.96)" }], { duration: 170, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" });
+    catcher.style.pointerEvents = "none";
+    an.finished.then(() => catcher.remove()).catch(() => catcher.remove());
+  };
+  catcher.addEventListener("click", e => { if(e.target === catcher || e.target.closest(".btn")) close(); });
+  catcher.addEventListener("keydown", e => { if(e.key === "Escape") close(); });
+  pop.querySelector(".btn").focus({ preventScroll: true });
+}
