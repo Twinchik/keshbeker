@@ -175,8 +175,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 .card.photo .strip,.card.photo .face{text-shadow:0 1px 3px rgba(0,0,0,.55)}
 /* фото карты: превью растягивается на всё свободное место, справа две кнопки одинаковой ширины */
 .ph{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
-.ph-prev{width:100%;aspect-ratio:1.586;border-radius:10px;background:var(--c-bg) center/cover no-repeat;box-shadow:0 0 0 1px var(--line);position:relative;overflow:hidden}
+.ph-prev{width:100%;aspect-ratio:2.2;border-radius:10px;background:var(--c-bg) center/cover no-repeat;box-shadow:0 0 0 1px var(--line);position:relative;overflow:hidden}
 .ph-prev::after{content:"";position:absolute;inset:0;background:var(--c-sheen)}
+.ph-bank{position:absolute;left:12px;top:9px;right:12px;z-index:1;color:var(--c-ink);font-family:var(--display);font-weight:700;font-size:17px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ph-btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .ph-btns .btn{justify-content:center}
 .ph-btns .btn.ghost{grid-column:1/-1}
