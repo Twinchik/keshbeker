@@ -21,7 +21,7 @@ function openEditor(card, startTab="cur"){
           <button type="button" class="btn ghost" id="edPhDel" hidden>Убрать фото</button>
         </div></div>
     </div>
-    <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}<label class="sw-own" id="edOwn" aria-pressed="${isOwnColor(editing.style)}" style="${isOwnColor(editing.style)?styleVars(editing.style):""}" title="Свой цвет"><input type="color" id="edOwnIn" value="${isOwnColor(editing.style)?editing.style:"#ff2d55"}" aria-label="Свой цвет"></label></div></div>
+    <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}<button type="button" class="sw-own" id="edOwn" aria-pressed="${isOwnColor(editing.style)}" style="${isOwnColor(editing.style)?styleVars(editing.style):""}" aria-label="Свой цвет"></button></div></div>
     <div class="fl"><span class="lab lab-h">Кешбек${qhelp("Кешбек по месяцам","«Сейчас» — кешбек, который действует в этом месяце. «Следующий» — категории на следующий месяц: выбери их заранее, 1-го числа они сами станут текущими.")}</span>
       <div class="seg" role="tablist" id="edSeg"><button type="button" role="tab" data-tab="cur">Сейчас<small>${esc(monthOnly(nowMonth()))}</small></button><button type="button" role="tab" data-tab="next">Следующий<small>${esc(monthOnly(addMonth(nowMonth())))}</small></button></div>
       <div id="edRows" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -53,10 +53,12 @@ function openEditor(card, startTab="cur"){
   setTimeout(()=>$("#edBank").focus(),50);
   s.addEventListener("click",e=>{ if(e.target===s) closeEditor(); });
   $("#edCancel").onclick=closeEditor;
-  $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("#edOwn").setAttribute("aria-pressed","false"); drawPhoto();};
-  // свой цвет: системная палитра (на айфоне — сетка, спектр и ползунки); образец сразу перекрашивается
-  $("#edOwnIn").oninput=e=>{ const hex=e.target.value.toLowerCase(); editing.style=hex; editing.custom=null;
-    $("#edSw").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false"));
+  $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("#edOwn").setAttribute("aria-pressed","false"); drawPhoto();};
+  // свой цвет: своя палитра с кнопками «Отмена» и «Готово»
+  $("#edOwn").onclick=async()=>{
+    const hex=await openColorPicker(isOwnColor(editing.style)?editing.style:"#e8475a", $("#edBank").value.trim()||"Карта"); if(!hex) return;
+    editing.style=hex; editing.custom=null;
+    $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed","false"));
     const own=$("#edOwn"); own.setAttribute("aria-pressed","true"); own.setAttribute("style",styleVars(hex)); drawPhoto(); };
   const drawPhoto=()=>{ $("#edPhPrev").setAttribute("style", cardVars(editing)); $("#edPhDel").hidden=!(editing.photo||editing.custom);
     $("#edPhDel").textContent = editing.custom ? "Убрать цвета с фото" : "Убрать фото";
@@ -170,3 +172,47 @@ function openTrash(){
   s.addEventListener("keydown",e=>{ if(e.key==="Escape") s.remove(); });
 }
 $("#trashBtn").addEventListener("click",openTrash);
+
+/* ---------- палитра «Свой цвет» ---------- */
+// Квадрат (насыщенность × яркость) + полоса оттенка + быстрые цвета. Карта-образец меняется вживую.
+// Возвращает "#rrggbb" по «Готово» или null по «Отмена».
+function hsv2hex(h,s,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*s*Math.max(0,Math.min(k,4-k,1)); };
+  return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
+function hex2hsv(hex){ const n=parseInt(hex.slice(1),16), r=(n>>16&255)/255, g=(n>>8&255)/255, b=(n&255)/255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn; let h=0;
+  if(d){ h = mx===r ? ((g-b)/d)%6 : mx===g ? (b-r)/d+2 : (r-g)/d+4; h*=60; if(h<0) h+=360; }
+  return [h, mx?d/mx:0, mx]; }
+const QUICK_COLORS=["#e8475a","#ff7a1a","#f5c518","#34c759","#00a3a3","#2f80ed","#5b3df5","#c13bd6","#ff5fa2","#8d6e63","#607d8b","#1d1d1f"];
+function openColorPicker(start, bank){
+  return new Promise(resolve=>{
+    let [h,s,v]=hex2hsv(start);
+    const sc=document.createElement("div"); sc.className="scrim"; sc.style.zIndex=700;
+    sc.innerHTML=`<div class="sheet cp" role="dialog" aria-modal="true" aria-label="Свой цвет">
+      <h3>Свой цвет</h3>
+      <div class="cp-card" id="cpCard"><b>${esc(bank)}</b><span>до 5%</span></div>
+      <div class="cp-sv" id="cpSv"><i class="cp-dot" id="cpSvDot"></i></div>
+      <div class="cp-hue" id="cpHue"><i class="cp-dot" id="cpHueDot"></i></div>
+      <div class="cp-quick" id="cpQuick">${QUICK_COLORS.map(c=>`<button type="button" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join("")}</div>
+      <div class="acts"><div></div><div><button type="button" class="btn ghost" id="cpCancel">Отмена</button><button type="button" class="btn primary" id="cpOk">Готово</button></div></div>
+    </div>`;
+    document.body.appendChild(sc);
+    const sv=sc.querySelector("#cpSv"), hue=sc.querySelector("#cpHue");
+    const draw=()=>{ const hex=hsv2hex(h,s,v);
+      sv.style.setProperty("--hue",`hsl(${h} 100% 50%)`);
+      sc.querySelector("#cpSvDot").style.cssText=`left:${s*100}%;top:${(1-v)*100}%;background:${hex}`;
+      sc.querySelector("#cpHueDot").style.cssText=`left:${h/360*100}%;background:hsl(${h} 100% 50%)`;
+      sc.querySelector("#cpCard").setAttribute("style",styleVars(hex));
+      sc.querySelectorAll("[data-c]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c===hex)); };
+    const drag=(el,fn)=>el.addEventListener("pointerdown",e=>{ e.preventDefault(); el.setPointerCapture(e.pointerId);
+      const at=ev=>{ const r=el.getBoundingClientRect(); fn(Math.max(0,Math.min(1,(ev.clientX-r.left)/r.width)), Math.max(0,Math.min(1,(ev.clientY-r.top)/r.height))); draw(); };
+      at(e); el.onpointermove=at; el.onpointerup=el.onpointercancel=()=>{ el.onpointermove=null; }; });
+    drag(sv,(x,y)=>{ s=x; v=1-y; });
+    drag(hue,x=>{ h=Math.min(359.9,x*360); });
+    sc.querySelector("#cpQuick").onclick=e=>{ const b=e.target.closest("[data-c]"); if(!b) return; [h,s,v]=hex2hsv(b.dataset.c); draw(); };
+    const done=val=>{ sc.remove(); resolve(val); };
+    sc.querySelector("#cpCancel").onclick=()=>done(null);
+    sc.querySelector("#cpOk").onclick=()=>done(hsv2hex(h,s,v));
+    sc.addEventListener("click",e=>{ if(e.target===sc) done(null); });
+    draw();
+  });
+}
