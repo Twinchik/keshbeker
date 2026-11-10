@@ -12,7 +12,7 @@ function hideSplash(){
 }
 setTimeout(hideSplash,8000);   // на всякий случай, если сеть совсем не отвечает
 function showGate(on){ if(on) hideSplash(); $("#gate").hidden=!on; $("#main").style.display=on?"none":"contents"; $("#addBtn").hidden=on; $("#acctBtn").hidden=on; $("#gateTheme").hidden=!on; }
-$("#guestBtn").addEventListener("click",()=>{ if(lsGet(GUEST)!=="1") setAll([]); startGuest(); });
+$("#guestBtn").addEventListener("click",()=>{ startGuest(); });
 function drawAvatar(){ const b=$("#acctBtn"); b.hidden=false; fillAvatar(b); }
 // своя аватарка хранится отдельной записью "_profile" рядом с картами
 const PROFILE_ID="_profile";
@@ -101,7 +101,7 @@ $("#acctBtn").addEventListener("click",()=>{
     <p class="sync${account.synced?"":" off"}">${account.synced?`Синхронизировано · ${cards.length} ${plural(cards.length,["карта","карты","карт"])}`:"Карты хранятся только в этом браузере"}</p>
     <div class="acct-theme">${themeSwitchHTML()}</div>
     <button type="button" class="install-btn wide" data-install hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Установить приложение</button>
-    <p class="note">${account.synced?"Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.":"Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, перенесутся в аккаунт сами."}</p>
+    <p class="note">${account.synced?"Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.":"Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, в аккаунт не переносятся — они остаются в режиме без входа на этом устройстве."}</p>
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
   document.body.appendChild(s);
@@ -117,18 +117,24 @@ $("#acctBtn").addEventListener("click",()=>{
 const plural=(n,f)=>f[(n%10===1&&n%100!==11)?0:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?1:2];
 
 /* ---------- storage ---------- */
-const LS="cashback-wallet-cache-v2";
-const readLS=()=>{ try{ return JSON.parse(localStorage.getItem(LS)||"null"); }catch{ return null; } };
-const writeLS=v=>{ try{ localStorage.setItem(LS,JSON.stringify(v)); }catch{} };
+const SO="cashbacker-signedout", GUEST="cashbacker-guest";
+const lsGet=k=>{ try{ return localStorage.getItem(k); }catch{ return null; } };
+const lsSet=(k,v)=>{ try{ localStorage.setItem(k,v); }catch{} };
+const lsDel=k=>{ try{ localStorage.removeItem(k); }catch{} };
+// карты аккаунта (копия с сервера) и карты гостя хранятся раздельно: при входе гостевые карты
+// в аккаунт не попадают и остаются на этом устройстве для режима «без входа»
+const LS="cashback-wallet-cache-v2", GLS="cashbacker-guest-cards";
+const isGuest=()=>lsGet(GUEST)==="1";
+const lsKey=()=>isGuest()?GLS:LS;
+// раньше гостевые карты лежали вместе с кешем аккаунта — переносим их в своё место
+if(isGuest() && lsGet(GLS)===null && lsGet(LS)!==null){ lsSet(GLS, lsGet(LS)); lsDel(LS); }
+const readLS=()=>{ try{ return JSON.parse(localStorage.getItem(lsKey())||"null"); }catch{ return null; } };
+const writeLS=v=>{ try{ localStorage.setItem(lsKey(),JSON.stringify(v)); }catch{} };
 const setStatus=t=>$("#status").textContent=t;
 
 const cached=readLS(); if(Array.isArray(cached)){ setAll(cached); }
 render();
 
-const SO="cashbacker-signedout", GUEST="cashbacker-guest";
-const lsGet=k=>{ try{ return localStorage.getItem(k); }catch{ return null; } };
-const lsSet=(k,v)=>{ try{ localStorage.setItem(k,v); }catch{} };
-const lsDel=k=>{ try{ localStorage.removeItem(k); }catch{} };
 let unsub=null, sb=null, session=null;
 const CFG=window.KESHBEKER_CONFIG||{};
 
@@ -163,19 +169,9 @@ function startSynced(){
   render();
   unsub=col.onSnapshot(snap=>{
     setAll(applyOrderOverride(snap.docs.map(d=>({...d.data(),id:d.id}))));
-    mergeGuest();
     applyRoll(); writeLS(allCards); drawAvatar(); hideSplash();
     if(editing) return; render();
   }, e=>setStatus("Нет связи с базой: "+(e.message||e)+". Проверь интернет или VPN."));
-}
-// карты, добавленные в гостевом режиме, переносятся в аккаунт при входе
-let pendingMerge=null;
-function mergeGuest(){
-  if(!pendingMerge) return;
-  const have=new Set(allCards.map(c=>c.id)); const add=pendingMerge.filter(c=>!have.has(c.id)); pendingMerge=null;
-  let n=0;
-  for(const c of add){ putCard(c); store.save(c); if(!String(c.id).startsWith("_") && !c.deletedAt) n++; }
-  if(n) toast("Перенесено карт из гостевого режима: "+n);
 }
 function loginFromGuest(){
   $("#authForm").hidden=false; $("#resetForm").hidden=true; setAuthMode("in");
@@ -183,7 +179,7 @@ function loginFromGuest(){
 }
 function startGuest(){
   hideSplash();
-  lsSet(GUEST,"1");
+  if(!isGuest()){ lsSet(GUEST,"1"); setAll(readLS()||[]); }   // вернулись в режим без входа — достаём его карты
   account={viewer:null, synced:false}; drawAvatar(); showGate(false);
   store={ save:async()=>writeLS(allCards), remove:async()=>writeLS(allCards) };
   applyRoll(); writeLS(allCards); render();
@@ -282,7 +278,7 @@ if(!window.supabase || cfgBad){
     session=sess;
     if(event==="PASSWORD_RECOVERY"){ showGate(true); $("#authForm").hidden=true; $("#resetForm").hidden=false; $("#guestBtn").hidden=true; return; }
     if(sess && !started && $("#resetForm").hidden){ started=true; setTimeout(()=>{
-      if(lsGet(GUEST)==="1") pendingMerge=(readLS()||[]).slice(); else setAll(readLS()||[]);
+      setAll(isGuest() ? [] : (readLS()||[]));   // гостевые карты в аккаунт не переносим
       startSynced(); },0); }
     if(!sess) started=false;
   });
