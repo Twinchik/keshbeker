@@ -216,7 +216,7 @@ function curtainSwap(box, top, swap, isCurrent = () => true, t = { out: 120, gap
 // Подсказка по кнопке «?»: стеклянное окошко с заголовком, текстом и «OK» посреди экрана.
 // Пока оно открыто, остальное не нажимается (фон чуть притемнён); закрыть можно только кнопкой «OK».
 function helpPop(anchor, title, text){
-  document.querySelector(".hpop-catch")?.remove();
+  if(document.querySelector(".hpop-catch")) return;   // одна подсказка за раз
   const catcher = document.createElement("div"); catcher.className = "hpop-catch";
   const pop = document.createElement("div"); pop.className = "hpop"; pop.setAttribute("role","alertdialog"); pop.setAttribute("aria-modal","true"); pop.setAttribute("aria-label", title);
   pop.innerHTML = `<strong></strong><p></p><button type="button" class="btn">OK</button>`;
@@ -230,15 +230,22 @@ function helpPop(anchor, title, text){
   }
   let closing = false;
   const close = () => {
-    if(closing) return; closing = true; anchor?.setAttribute("aria-expanded", "false");
+    if(closing) return; closing = true; anchor?.setAttribute("aria-expanded", "false"); unlock();
     if(reduce){ catcher.remove(); return; }
     catcher.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: "ease-in", fill: "forwards" });
     const an = pop.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "scale(.96)" }], { duration: 170, easing: "cubic-bezier(.4,0,1,1)", fill: "forwards" });
     an.finished.then(() => catcher.remove()).catch(() => catcher.remove());
   };
   pop.querySelector(".btn").addEventListener("click", close);
-  // нажатия мимо окошка никуда не проходят
+  // нажатия мимо окошка никуда не проходят, и страница под ним не листается (айфон иначе прокручивает фон пальцем)
   catcher.addEventListener("click", e => e.stopPropagation());
+  const stop = e => e.preventDefault();
+  catcher.addEventListener("touchmove", stop, { passive: false });
+  catcher.addEventListener("wheel", stop, { passive: false });
+  const locked = [document.documentElement, document.body, ...document.querySelectorAll(".sheet")];
+  const prevOv = locked.map(el => el.style.overflow);
+  locked.forEach(el => { el.style.overflow = "hidden"; });
+  const unlock = () => locked.forEach((el, i) => { el.style.overflow = prevOv[i]; });
   pop.querySelector(".btn").focus({ preventScroll: true });
 }
 
