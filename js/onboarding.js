@@ -23,7 +23,7 @@ function showWelcome(){
     { art: `<div class="wa-stack"><i style="--c:#2f80ed"></i><i style="--c:#f5c518"></i><i style="--c:#1d1d1f"></i></div>`,
       t: "Все карты в одном месте", d: "Добавь свои карты и кешбек на этот месяц." },
     { art: `<div class="wa-search"><span>Аптеки</span><b>7%</b></div><div class="wa-best"></div>`,
-      t: "Лучшая карта — первой", d: "Напиши, что покупаешь, — нужная карта встанет вперёд." },
+      t: "Лучшая карта — первой", d: "Напиши категорию или сразу магазин, например «Пятёрочка», — нужная карта встанет вперёд." },
     { art: `<div class="wa-shop"><span>Пятёрочка</span><b>10%</b></div><div class="wa-chips"><i></i><i></i><i></i></div>`,
       t: "Магазины и акции", d: "Карты лояльности, любимые категории и скидки — рядом." }
   ];
@@ -89,7 +89,7 @@ function startTour(){
   if(document.querySelector(".tour") || document.querySelector(".scrim")) return;
   const steps = [
     { el: () => $("#wallet .card"), t: "Нажми на карту — откроются все её категории." },
-    { el: () => $("#q")?.parentElement || $("#q"), t: "Напиши, что покупаешь, — лучшая карта встанет первой." },
+    { el: () => $("#q")?.parentElement || $("#q"), t: "Пиши категорию или сразу магазин — лучшая карта встанет первой." },
     { el: () => $('#viewTabs [data-view="shops"]'), t: "Здесь карты магазинов, любимые категории и акции." }
   ].filter(s => s.el());
   if(!steps.length) return;
