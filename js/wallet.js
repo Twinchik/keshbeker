@@ -98,7 +98,7 @@ function cardHTML(c, rk, isBest){
   const maxP = items.length ? items[0].p : 0;
   let right;
   if (r) right = r.item ? `<span class="lbl">${esc(r.base?"всё остальное":r.item.n)}</span><span class="big">${fmtP(r.p)}</span>` : `<span class="lbl">нет</span>`;
-  else right = items.length ? `<span class="lbl">${items.filter(i=>!isBase(i.n)).length} кат.</span><span class="big">до ${fmtP(maxP)}</span>` : `<span class="tag">пусто</span>`;
+  else right = items.length ? `<span class="lbl">${items.length} кат.</span><span class="big">до ${fmtP(maxP)}</span>` : `<span class="tag">пусто</span>`;
   const shown = items.slice(0,6);
   const hitSet = r && r.item && !r.item.shop ? r.item : null;
   const stale = c.month && c.month!==nowMonth();
