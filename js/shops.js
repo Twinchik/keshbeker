@@ -87,6 +87,11 @@ function shopGradient(name){
   let h=0; for(const ch of norm(name)) h=(h*31+ch.charCodeAt(0))%360;
   return `linear-gradient(135deg,hsl(${h} 70% 52%),hsl(${(h+35)%360} 72% 40%))`;
 }
+// как выглядит карта магазина: своё фото, цвета с фото, выбранный цвет или (по умолчанию) цвет по названию магазина
+function shopVars(o, name){
+  if(o && (o.photo || o.custom || o.style)) return cardVars({photo:o.photo, custom:o.custom, style:o.style});
+  return `--c-bg:${shopGradient(name)}`;
+}
 function shopGroups(){
   const m=new Map();
   const get=n=>{ const k=norm(n); if(!m.has(k)) m.set(k,{n,own:null,offers:[]}); return m.get(k); };
@@ -162,7 +167,7 @@ function renderShops(){
 function shopItemHTML(g){
     const o=g.own;
     const own = o ? (o.prog
-        ? `<button type="button" class="lcard" data-edit-shop="${esc(g.n)}" style="--c-bg:${shopGradient(g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">${esc(o.prog)}</span><span class="lc-p">${o.p!=null?fmtP(o.p):"карта"}</span></button>`
+        ? `<button type="button" class="lcard${o.photo?" photo":""}" data-edit-shop="${esc(g.n)}" style="${shopVars(o,g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">${esc(o.prog)}</span><span class="lc-p">${o.p!=null?fmtP(o.p):"карта"}</span></button>`
         : `<button type="button" class="lcard none" data-edit-shop="${esc(g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">Без своей карты</span><span class="lc-p">${o.p!=null?fmtP(o.p):""}</span></button>`)
       : `<button type="button" class="offer add" data-newshop="${esc(g.n)}">+ карта магазина</button>`;
     const offers = g.offers.length ? `<div class="offers"><span class="off-lbl">Банки:</span>${g.offers.map(x=>`<button type="button" class="offer" data-shop="${esc(x.n)}" data-card="${x.card.id}" aria-label="${esc(x.card.bank)} ${fmtP(x.p)}"><i style="${cardVars(x.card)}"></i>${esc(x.card.bank)} <b>${fmtP(x.p)}</b></button>`).join("")}</div>` : "";
@@ -217,6 +222,13 @@ function openShop(name="", isNew){
       <input class="in" id="shProg" maxlength="40" placeholder="Название карты, например Х5 Клуб">
       <label class="chk"><input type="checkbox" id="shNone"> У магазина нет своей карты</label>
       <p class="note" id="shHint" style="margin:0" hidden></p></div>
+    <div class="fl" id="shLook"><span class="lab">Фото карты</span>
+      <div class="ph-btns">
+        <label class="btn" for="shCam">Сфотографировать<input class="vh" id="shCam" type="file" accept="image/*" capture="environment"></label>
+        <label class="btn" for="shGal">Из галереи<input class="vh" id="shGal" type="file" accept="image/*"></label>
+        <button type="button" class="btn ghost" id="shPhDel" hidden>Убрать фото</button></div>
+      <span class="lab" id="shColorLab" style="margin-top:8px">Цвет</span>
+      <div class="sw" id="shSw"><button type="button" class="sw-auto" data-st="" style="--c-bg:${shopGradient(name||"магазин")}" aria-label="Цвет по названию магазина">А</button>${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}"></button>`).join("")}<button type="button" class="sw-own" id="shOwn" aria-label="Свой цвет"></button></div></div>
     <div class="fl"><label for="shP">Бонусы по карте магазина, %</label><input class="in" id="shP" inputmode="decimal" placeholder="Например, 5 (можно оставить пустым)"></div>
     <div class="fl" id="shFavBox"><span class="lab lab-h">Любимое на ${esc(monthOnly(nowMonth()))}${qhelp("Любимое","Любимые категории и товары, которые ты выбрал в приложении магазина на этот месяц.")}</span>
       <span class="sublab">Любимые категории</span><div class="favrows" id="shCats"></div>
@@ -233,10 +245,23 @@ function openShop(name="", isNew){
   document.body.appendChild(s);
   let progTouched=!!cur;   // если человек сам поправил название карты — больше не подменяем
   const nameEl=$("#shName"), progEl=$("#shProg"), noneEl=$("#shNone"), hint=$("#shHint");
+  // вид карты магазина — как у банковских карт: фото, готовые цвета или свой цвет
+  const look={photo:cur?.photo||null, custom:cur?.custom||null, style:cur?.style||""};
+  const drawLook=()=>{
+    $("#shPhDel").hidden=!(look.photo||look.custom);
+    $("#shPhDel").textContent = look.custom ? "Убрать цвета с фото" : "Убрать фото";
+    $("#shColorLab").textContent = look.photo ? "Цвет (если убрать фото)" : "Цвет";
+    const autoB=$("#shSw").querySelector(".sw-auto"); autoB.style.setProperty("--c-bg", shopGradient(nameEl.value||"магазин"));
+    $("#shSw").querySelectorAll("[data-st]").forEach(b=>b.setAttribute("aria-pressed", !look.custom && b.dataset.st===look.style));
+    const own=$("#shOwn"), isOwn=!look.custom && isOwnColor(look.style);
+    own.setAttribute("aria-pressed", isOwn); own.setAttribute("style", isOwn ? styleVars(look.style) : "");
+  };
   const drawPrev=()=>{
     const none=noneEl.checked; progEl.disabled=none;
-    $("#shPrev").classList.toggle("none",none);
-    $("#shPrev").style.setProperty("--c-bg", shopGradient(nameEl.value||"магазин"));
+    $("#shPrev").classList.toggle("none",none); $("#shLook").hidden=none;
+    $("#shPrev").classList.toggle("photo",!!look.photo);
+    $("#shPrev").setAttribute("style", shopVars(look, nameEl.value||"магазин"));
+    drawLook();
     $("#shPrevName").textContent = none ? "Без своей карты" : (progEl.value.trim() || "Карта магазина");
     const p=$("#shP").value.trim(); $("#shPrevP").textContent = p ? fmtP(cleanP(p)) : "";
   };
@@ -289,6 +314,16 @@ function openShop(name="", isNew){
   const save=async list=>{ const d={...looseDoc(), shops:list, updatedAt:Date.now()}; putCard(d); renderShops(); render(); await store.save(d); };
   const others=()=>(looseDoc().shops||[]).filter(x=>!cur || norm(x.n)!==norm(cur.n));
   if($("#shDel")) $("#shDel").onclick=async()=>{ close(); await save(others()); };
+  $("#shSw").onclick=async e=>{
+    if(e.target.closest("#shOwn")){ const hex=await openColorPicker(isOwnColor(look.style)?look.style:"#e8475a", progEl.value.trim()||"Карта магазина"); if(!hex) return;
+      look.style=hex; look.custom=null; drawPrev(); return; }
+    const b=e.target.closest("[data-st]"); if(!b) return; look.style=b.dataset.st; look.custom=null; drawPrev(); };
+  const onShopFile=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
+    const r=await openPhotoEditor(f); if(!r) return;
+    if(r.photo){ look.photo=r.photo; look.custom=null; } else { look.custom=r.custom; look.photo=null; }
+    drawPrev(); };
+  $("#shCam").onchange=onShopFile; $("#shGal").onchange=onShopFile;
+  $("#shPhDel").onclick=()=>{ look.photo=null; look.custom=null; drawPrev(); };
   $("#shForm").onsubmit=async e=>{ e.preventDefault();
     const typed=nameEl.value.trim(); if(!typed) return;
     const n=loyaltyFor(typed)?.canon || typed;   // «пятерочка» → «Пятёрочка»
@@ -300,7 +335,8 @@ function openShop(name="", isNew){
       fav: (fv.cats.length||fv.goods.length) ? fv : (oldFav && oldFav.month!==nm ? oldFav : null),
       // акции: пустые строки отбрасываем, давно закончившиеся (больше 30 дней назад) — тоже
       deals: (syncDeals(), deals.filter(x=>String(x.n||"").trim() && String(x.d||"").trim()).map(x=>({n:String(x.n).trim(), d:cleanP(x.d), until:x.until||""}))
-        .filter(x=>!x.until || (Date.now()-new Date(x.until+"T23:59:59"))/864e5 < 30))};
+        .filter(x=>!x.until || (Date.now()-new Date(x.until+"T23:59:59"))/864e5 < 30)),
+      ...(look.photo?{photo:look.photo}:{}), ...(look.custom?{custom:look.custom}:{}), ...(look.style?{style:look.style}:{})};
     close();
     await save([...others().filter(x=>norm(x.n)!==norm(n)), entry]);
   };
