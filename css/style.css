@@ -511,7 +511,7 @@ html.scroll-lock,html.scroll-lock body{overflow:hidden!important}
 /* мини-карты в приветствии: яркие градиенты, чип, «строчки» категорий */
 .wa-card{position:absolute;width:190px;height:120px;border-radius:16px;background:var(--bg);color:#fff;padding:12px 14px;box-shadow:0 14px 30px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.18);overflow:hidden;text-align:left}
 .wa-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 100% 0,rgba(255,255,255,.35),transparent 55%)}
-.wa-card b{display:block;font-family:var(--display);font-size:15px}
+.wa-card b{display:block;max-width:calc(100% - 52px);font-family:var(--display);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wa-card span{position:absolute;right:14px;top:12px;font-family:var(--display);font-weight:700;font-size:14px}
 .wa-chip{position:absolute;left:14px;top:46px;width:26px;height:19px;border-radius:5px;background:linear-gradient(135deg,#f3f3f3,#b9b9b9);opacity:.9}
 .wa-card em{position:absolute;left:50px;height:6px;border-radius:3px;background:rgba(255,255,255,.55)}
