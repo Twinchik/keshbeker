@@ -507,17 +507,38 @@ html.scroll-lock,html.scroll-lock body{overflow:hidden!important}
 .wl-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;gap:12px}
 .wl-slide h2{font-family:var(--display);font-size:26px;line-height:1.15;margin:18px 0 0}
 .wl-slide p{margin:0;color:var(--muted);font-size:16px;line-height:1.4;max-width:300px}
-.wl-art{position:relative;width:220px;height:170px;display:grid;place-items:center}
-.wa-stack{position:relative;width:200px;height:150px}
-.wa-stack i{position:absolute;left:0;right:0;height:120px;border-radius:16px;background:var(--c);box-shadow:0 -4px 14px rgba(0,0,0,.25)}
-.wa-stack i:nth-child(1){top:0}.wa-stack i:nth-child(2){top:16px}.wa-stack i:nth-child(3){top:32px}
-.wa-search{width:210px;display:flex;justify-content:space-between;padding:12px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:16px}
-.wa-search b{color:var(--good)}
-.wa-best{width:200px;height:84px;margin-top:-30px;border-radius:14px;background:#2f80ed;box-shadow:0 10px 30px rgba(47,128,237,.35)}
-.wl-art:has(.wa-search){display:flex;flex-direction:column;gap:42px}
-.wa-shop{width:200px;height:78px;border-radius:12px;background:#e8475a;color:#fff;display:flex;justify-content:space-between;align-items:flex-start;padding:10px 14px;font-weight:700}
-.wl-art:has(.wa-shop){display:flex;flex-direction:column;gap:12px}
-.wa-chips{display:flex;gap:6px}.wa-chips i{width:58px;height:24px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+.wl-art{position:relative;width:260px;height:200px;display:grid;place-items:center}
+/* мини-карты в приветствии: яркие градиенты, чип, «строчки» категорий */
+.wa-card{position:absolute;width:190px;height:120px;border-radius:16px;background:var(--bg);color:#fff;padding:12px 14px;box-shadow:0 14px 30px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.18);overflow:hidden;text-align:left}
+.wa-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 100% 0,rgba(255,255,255,.35),transparent 55%)}
+.wa-card b{display:block;font-family:var(--display);font-size:15px}
+.wa-card span{position:absolute;right:14px;top:12px;font-family:var(--display);font-weight:700;font-size:14px}
+.wa-chip{position:absolute;left:14px;top:46px;width:26px;height:19px;border-radius:5px;background:linear-gradient(135deg,#f3f3f3,#b9b9b9);opacity:.9}
+.wa-card em{position:absolute;left:50px;height:6px;border-radius:3px;background:rgba(255,255,255,.55)}
+.wa-card em:nth-of-type(1){top:49px;width:80px}.wa-card em:nth-of-type(2){top:61px;width:56px;opacity:.7}
+.wa-fan .c1{transform:translate(-46px,14px) rotate(-14deg)}
+.wa-fan .c2{transform:translate(46px,14px) rotate(14deg)}
+.wa-fan .c3{transform:translateY(-6px);z-index:2}
+.wa-fan,.wa-find,.wa-shopart{position:relative;width:100%;height:100%;display:grid;place-items:center}
+.wa-q{position:absolute;top:0;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;width:220px;padding:11px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:15px;box-shadow:0 8px 20px rgba(0,0,0,.2)}
+.wa-q svg{color:var(--muted);flex:none}
+.wa-caret{width:2px;height:17px;background:#4f8cff;animation:waBlink 1s steps(1) infinite}
+@keyframes waBlink{50%{opacity:0}}
+.wa-pick{position:absolute;top:62px;width:190px;height:130px}
+.wa-pick .wa-card{left:0}
+.wa-pick .dim{transform:translateY(18px) scale(.92);opacity:.55}
+.wa-pick .best{transform:translateY(-4px);box-shadow:0 0 0 2px rgba(255,255,255,.8),0 16px 40px rgba(255,95,109,.45)}
+.wa-badge{position:absolute;right:-14px;top:-14px;z-index:3;padding:5px 10px;border-radius:999px;background:#34c759;color:#fff;font-weight:800;font-size:14px;box-shadow:0 6px 16px rgba(52,199,89,.45)}
+.wa-lc{position:absolute;top:6px;width:210px;height:84px;border-radius:14px;background:var(--bg);color:#fff;display:flex;justify-content:space-between;align-items:flex-start;padding:11px 14px;font-weight:700;box-shadow:0 14px 30px rgba(46,157,79,.35),inset 0 0 0 1px rgba(255,255,255,.2)}
+.wa-lc b{font-size:16px}.wa-lc span{font-family:var(--display);font-size:18px;align-self:flex-end}
+.wa-tags{position:absolute;top:104px;display:flex;gap:6px}
+.wa-tags span{white-space:nowrap;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--ink);background:color-mix(in srgb,var(--t) 22%,var(--surface));border:1px solid color-mix(in srgb,var(--t) 55%,transparent)}
+.wa-tags b{color:var(--t)}
+.wa-deal{position:absolute;top:150px;padding:6px 12px;border-radius:8px;background:#ff3b30;color:#fff;font-size:13px;font-weight:600;transform:rotate(-4deg);box-shadow:0 8px 18px rgba(255,59,48,.35)}
+/* лёгкое «парение» картинок */
+.wl-art>div{animation:waFloat 4s ease-in-out infinite}
+@keyframes waFloat{0%,100%{translate:0 0}50%{translate:0 -6px}}
+@media (prefers-reduced-motion:reduce){.wl-art>div,.wa-caret{animation:none}}
 .wl-foot{display:flex;flex-direction:column;align-items:center;gap:18px;padding:0 24px}
 .wl-dots{display:flex;gap:7px}
 .wl-dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:width .3s,background .3s}

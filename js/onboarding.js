@@ -20,11 +20,14 @@ function maybeWelcome(){
 }
 function showWelcome(){
   const slides = [
-    { art: `<div class="wa-stack"><i style="--c:#2f80ed"></i><i style="--c:#f5c518"></i><i style="--c:#1d1d1f"></i></div>`,
+    { art: `<div class="wa-fan"><div class="wa-card c1" style="--bg:linear-gradient(135deg,#ffe259,#ffa751)"><b>Т-Банк</b><span>до 25%</span><i class="wa-chip"></i><em></em><em></em></div><div class="wa-card c2" style="--bg:linear-gradient(135deg,#ff5f6d,#c2185b)"><b>Альфа</b><span>до 15%</span><i class="wa-chip"></i><em></em><em></em></div><div class="wa-card c3" style="--bg:linear-gradient(135deg,#4facfe,#3a47d5)"><b>Озон Банк</b><span>до 50%</span><i class="wa-chip"></i><em></em><em></em></div></div>`,
       t: "Все карты в одном месте", d: "Добавь свои карты и кешбек на этот месяц." },
-    { art: `<div class="wa-search"><span>Аптеки</span><b>7%</b></div><div class="wa-best"></div>`,
+    { art: `<div class="wa-find"><div class="wa-q"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Пятёрочка<i class="wa-caret"></i></div>
+        <div class="wa-pick"><div class="wa-card dim d1" style="--bg:linear-gradient(135deg,#43e97b,#1e9e57)"><b>Сбер</b><span>до 5%</span><i class="wa-chip"></i><em></em><em></em></div><div class="wa-card best" style="--bg:linear-gradient(135deg,#ff5f6d,#c2185b)"><b>Альфа</b><i class="wa-chip"></i><em></em><em></em></div><span class="wa-badge">10%</span></div></div>`,
       t: "Лучшая карта — первой", d: "Напиши категорию или сразу магазин, например «Пятёрочка», — нужная карта встанет вперёд." },
-    { art: `<div class="wa-shop"><span>Пятёрочка</span><b>10%</b></div><div class="wa-chips"><i></i><i></i><i></i></div>`,
+    { art: `<div class="wa-shopart"><div class="wa-lc" style="--bg:linear-gradient(135deg,#a8e063,#2e9d4f)"><b>Пятёрочка</b><span>10%</span></div>
+        <div class="wa-tags"><span style="--t:#ff9f43">Овощи <b>15%</b></span><span style="--t:#54a0ff">Молоко <b>10%</b></span><span style="--t:#ee5a9f">Хлеб <b>5%</b></span></div>
+        <div class="wa-deal">Шоколад <b>−30%</b></div></div>`,
       t: "Магазины и акции", d: "Карты лояльности, любимые категории и скидки — рядом." }
   ];
   const w = document.createElement("div"); w.className = "welcome"; w.setAttribute("role","dialog"); w.setAttribute("aria-modal","true"); w.setAttribute("aria-label","Добро пожаловать");
