@@ -306,9 +306,9 @@ button,a,label,.card{touch-action:manipulation}
 .lcard.none,.lprev.none{background:transparent;color:var(--muted);box-shadow:none;border:1.5px dashed var(--line)}
 .lprev{max-width:240px}
 /* маленькое превью карты магазина слева от кнопок фото — как у банковских карт */
-.lprev.ph-shop{max-width:none;aspect-ratio:1.586;border-radius:10px;padding:8px 10px;box-shadow:0 0 0 1px var(--line)}
-.ph-shop .lc-prog{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ph-shop .lc-p{font-size:13px}
+.lprev.ph-shop{max-width:none;aspect-ratio:1.586;border-radius:10px;padding:10px 12px;gap:6px;box-shadow:0 0 0 1px var(--line)}
+.ph-shop .lc-prog{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-shop .lc-p{font-size:18px}
 .fl>label.chk,.chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:500}
 .chk input{width:18px;height:18px;accent-color:var(--accent)}
 .off-lbl{font-size:12px;color:var(--muted);align-self:center}
