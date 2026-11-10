@@ -21,7 +21,7 @@ function openEditor(card, startTab="cur"){
           <button type="button" class="btn ghost" id="edPhDel" hidden>Убрать фото</button>
         </div></div>
     </div>
-    <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}</div></div>
+    <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}<label class="sw-own" id="edOwn" aria-pressed="${isOwnColor(editing.style)}" style="${isOwnColor(editing.style)?styleVars(editing.style):""}" title="Свой цвет"><input type="color" id="edOwnIn" value="${isOwnColor(editing.style)?editing.style:"#ff2d55"}" aria-label="Свой цвет"></label></div></div>
     <div class="fl"><span class="lab lab-h">Кешбек${qhelp("Кешбек по месяцам","«Сейчас» — кешбек, который действует в этом месяце. «Следующий» — категории на следующий месяц: выбери их заранее, 1-го числа они сами станут текущими.")}</span>
       <div class="seg" role="tablist" id="edSeg"><button type="button" role="tab" data-tab="cur">Сейчас<small>${esc(monthOnly(nowMonth()))}</small></button><button type="button" role="tab" data-tab="next">Следующий<small>${esc(monthOnly(addMonth(nowMonth())))}</small></button></div>
       <div id="edRows" style="display:flex;flex-direction:column;gap:6px"></div>
@@ -53,7 +53,11 @@ function openEditor(card, startTab="cur"){
   setTimeout(()=>$("#edBank").focus(),50);
   s.addEventListener("click",e=>{ if(e.target===s) closeEditor(); });
   $("#edCancel").onclick=closeEditor;
-  $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); drawPhoto();};
+  $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("#edOwn").setAttribute("aria-pressed","false"); drawPhoto();};
+  // свой цвет: системная палитра (на айфоне — сетка, спектр и ползунки); образец сразу перекрашивается
+  $("#edOwnIn").oninput=e=>{ const hex=e.target.value.toLowerCase(); editing.style=hex; editing.custom=null;
+    $("#edSw").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    const own=$("#edOwn"); own.setAttribute("aria-pressed","true"); own.setAttribute("style",styleVars(hex)); drawPhoto(); };
   const drawPhoto=()=>{ $("#edPhPrev").setAttribute("style", cardVars(editing)); $("#edPhDel").hidden=!(editing.photo||editing.custom);
     $("#edPhDel").textContent = editing.custom ? "Убрать цвета с фото" : "Убрать фото";
     $("#edColorLab").textContent = editing.photo ? "Цвет (если убрать фото)" : "Цвет"; };

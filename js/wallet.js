@@ -25,7 +25,16 @@ function photoUrl(src){
 function cardVars(c){ return c.photo ? `--c-bg:url(${photoUrl(c.photo)});--c-ink:#fff;--c-sheen:${PHOTO_SHEEN}`
   : c.custom ? `--c-bg:${c.custom.bg};--c-ink:${c.custom.ink};--c-sheen:radial-gradient(90% 120% at 110% -10%,rgba(255,255,255,.18),transparent 60%)`
   : styleVars(c.style); }
-function styleVars(st){ const s=STYLES[st]||STYLES.graphite; return `--c-bg:${s.bg};--c-ink:${s.ink};--c-sheen:${s.sheen||"radial-gradient(90% 120% at 110% -10%,rgba(255,255,255,.18),transparent 60%)"}`; }
+// свой цвет карты: style хранится как "#rrggbb" — из него делаем мягкий градиент и подбираем цвет текста
+const isOwnColor = st => /^#[0-9a-f]{6}$/i.test(st||"");
+function ownStyle(hex){
+  const n=parseInt(hex.slice(1),16), rgb=[n>>16&255,n>>8&255,n&255];
+  const mix=(t,k)=>"#"+rgb.map(v=>Math.round(v+(t-v)*k).toString(16).padStart(2,"0")).join("");
+  const lum=rgb.map(v=>{ v/=255; return v<=.03928?v/12.92:((v+.055)/1.055)**2.4; }), L=.2126*lum[0]+.7152*lum[1]+.0722*lum[2];
+  const light=L>.45;
+  return { bg:`linear-gradient(135deg,${mix(255,.14)},${mix(0,.18)})`, ink: light ? mix(0,.82) : "#fff" };
+}
+function styleVars(st){ const s=isOwnColor(st) ? ownStyle(st) : (STYLES[st]||STYLES.graphite); return `--c-bg:${s.bg};--c-ink:${s.ink};--c-sheen:${s.sheen||"radial-gradient(90% 120% at 110% -10%,rgba(255,255,255,.18),transparent 60%)"}`; }
 function topItems(card){ return [...(card.items||[])].sort((a,b)=>b.p-a.p); }
 
 /* ---------- что ищут чаще всего ---------- */
