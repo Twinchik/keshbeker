@@ -14,7 +14,7 @@ function openEditor(card, startTab="cur"){
       <div class="fl"><label for="edLabel">Подпись</label><input class="in" id="edLabel" maxlength="20" placeholder="Black" value="${esc(editing.label)}"></div>
     </div>
     <div class="fl"><span class="lab">Фото карты</span>
-      <div class="ph"><div class="ph-prev" id="edPhPrev" aria-hidden="true"><span class="ph-bank" id="edPhName"></span></div>
+      <div class="ph"><div class="ph-prev" id="edPhPrev" aria-hidden="true"><span class="ph-bank" id="edPhName"></span><span class="ph-label" id="edPhLabel"></span></div>
         <div class="ph-btns">
           <label class="btn" for="edCam">Сфоткать<input class="vh" id="edCam" type="file" accept="image/*" capture="environment"></label>
           <label class="btn" for="edGal">Из галереи<input class="vh" id="edGal" type="file" accept="image/*"></label>
@@ -65,8 +65,9 @@ function openEditor(card, startTab="cur"){
     $("#edColorLab").textContent = editing.photo ? "Цвет (если убрать фото)" : "Цвет"; };
   drawPhoto();
   // название банка на превью — сразу видно, как будет выглядеть карта
-  const drawPrevName=()=>{ $("#edPhName").textContent=$("#edBank").value.trim()||"Банк"; };
-  $("#edBank").addEventListener("input",drawPrevName); drawPrevName();
+  // и подпись (Black, Platinum…) снизу слева, мельче — как на карте в кошельке
+  const drawPrevName=()=>{ $("#edPhName").textContent=$("#edBank").value.trim()||"Банк"; $("#edPhLabel").textContent=$("#edLabel").value.trim(); };
+  $("#edBank").addEventListener("input",drawPrevName); $("#edLabel").addEventListener("input",drawPrevName); drawPrevName();
   const onFile=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
     const r=await openPhotoEditor(f); if(!r) return;
     if(r.photo){ editing.photo=r.photo; editing.custom=null; } else { editing.custom=r.custom; editing.photo=null; }
