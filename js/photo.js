@@ -162,8 +162,7 @@ function openPhotoEditor(file){
     let corners=detectCorners(cv), level=0, mode="photo", busy=0, result=null;
     const s=document.createElement("div"); s.className="scrim"; s.id="phScrim"; s.style.zIndex=700;
     s.innerHTML=`<div class="sheet pe" role="dialog" aria-modal="true" aria-label="Обработка фото">
-      <h3>Обработка фото</h3>
-      <p class="note" style="margin:0">Перетащи кружки на углы карты — фото выровняется. Потом выбери вид.</p>
+      <h3 class="h-help">Обработка фото${qhelp("Обработка фото","Перетащи кружки на углы карты — фото выровняется. Потом выбери вид.")}</h3>
       <div class="pe-stage" id="peStage"><canvas id="peSrc"></canvas><svg id="peQuad"></svg>${[0,1,2,3].map(i=>`<button type="button" class="pe-h" data-h="${i}" aria-label="Угол ${i+1}"></button>`).join("")}</div>
       <div class="pe-row"><button type="button" class="btn" id="peRot">↻ Повернуть</button><button type="button" class="btn ghost" id="peAuto">Найти карту заново</button></div>
       <div class="fl"><span class="lab">Вид</span><div class="seg" id="peMode"><button type="button" data-m="photo" aria-selected="true">Фото</button><button type="button" data-m="colors" aria-selected="false">Цвета карты</button></div></div>

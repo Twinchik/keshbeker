@@ -241,3 +241,11 @@ function helpPop(anchor, title, text){
   catcher.addEventListener("click", e => e.stopPropagation());
   pop.querySelector(".btn").focus({ preventScroll: true });
 }
+
+// кнопка «?» рядом с заголовком: по нажатию — подсказка посреди экрана (helpPop)
+const qhelp = (title, text) => `<button type="button" class="qhelp" data-qhelp data-t="${esc(title)}" data-x="${esc(text)}" aria-label="Подсказка: ${esc(title)}" aria-expanded="false">?</button>`;
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-qhelp]"); if(!b) return;
+  e.preventDefault(); e.stopPropagation();
+  helpPop(b, b.dataset.t, b.dataset.x);
+}, true);

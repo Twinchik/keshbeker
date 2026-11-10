@@ -422,6 +422,9 @@ body.reordering{-webkit-user-select:none;user-select:none}
 /* заголовок с кнопкой «?», под которой спрятано пояснение */
 .h-help{display:flex;align-items:center;gap:10px}
 .qhelp{width:24px;height:24px;flex:none;border-radius:50%;border:1.5px solid var(--muted);background:transparent;color:var(--muted);font-family:inherit;font-weight:700;font-size:13px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,border-color .2s}
+.lab-h{display:flex;align-items:center;gap:6px}
+.lab-h .qhelp,.sync .qhelp{width:18px;height:18px;font-size:11px;border-width:1.3px;text-transform:none;letter-spacing:0}
+.sync .qhelp{display:inline-grid;vertical-align:-3px;margin-left:6px}
 .qhelp[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 /* всплывающая подсказка (helpPop в theme.js): стекло с размытием фона, тонкая светлая кромка */
 .hpop-catch{position:fixed;inset:0;z-index:800;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.28)}

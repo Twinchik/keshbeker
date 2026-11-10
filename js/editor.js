@@ -22,9 +22,8 @@ function openEditor(card, startTab="cur"){
         </div></div>
     </div>
     <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}</div></div>
-    <div class="fl"><span class="lab">Кешбек</span>
+    <div class="fl"><span class="lab lab-h">Кешбек${qhelp("Кешбек по месяцам","«Сейчас» — кешбек, который действует в этом месяце. «Следующий» — категории на следующий месяц: выбери их заранее, 1-го числа они сами станут текущими.")}</span>
       <div class="seg" role="tablist" id="edSeg"><button type="button" role="tab" data-tab="cur">Сейчас<small>${esc(monthOnly(nowMonth()))}</small></button><button type="button" role="tab" data-tab="next">Следующий<small>${esc(monthOnly(addMonth(nowMonth())))}</small></button></div>
-      <p class="note" id="edTabNote" style="margin:0"></p>
       <div id="edRows" style="display:flex;flex-direction:column;gap:6px"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="edAdd">+ Строка</button><button type="button" class="btn ghost" id="edCopy">Скопировать из текущего</button><button type="button" class="btn ghost danger" id="edClearNext">Очистить месяц</button></div></div>
     <datalist id="commonCats">${COMMON.map(c=>`<option value="${c}">`).join("")}</datalist>
@@ -43,10 +42,9 @@ function openEditor(card, startTab="cur"){
   const setTab=(t,first)=>{ if(!first && t===tab0) return; tab0=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
     if(first){ applyTab(t); return; }
     const my=++tabFade;
-    curtainSwap($("#edSeg").parentElement, $("#edTabNote"), () => applyTab(t), () => my===tabFade);
+    curtainSwap($("#edSeg").parentElement, $("#edRows"), () => applyTab(t), () => my===tabFade);
   };
   const applyTab=(t,noSync)=>{ if(!noSync) syncRows(); tab=t;
-    $("#edTabNote").textContent = t==="cur" ? `Кешбек, который действует сейчас, в ${monthOnly(nowMonth())}.` : `Выбери категории на ${monthOnly(nm)} заранее. 1 ${genMonth(nm)} они сами станут текущими.`;
     $("#edCopy").hidden = t==="cur"; $("#edClearNext").hidden = t==="cur" || editing.next.draft; drawRows(); };
   $("#edSeg").onclick=e=>{const b=e.target.closest("[data-tab]"); if(b) setTab(b.dataset.tab);};
   $("#edCopy").onclick=()=>{ editing.next.items=(editing.items||[]).map(i=>({...i})); editing.next.draft=false; drawRows(); };
@@ -149,7 +147,7 @@ function openTrash(){
   const draw=()=>{
     const del=allCards.filter(c=>c.deletedAt).sort((a,b)=>b.deletedAt-a.deletedAt);
     s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Корзина">
-      <h3 class="h-help">Корзина<button type="button" class="qhelp" data-help aria-label="Как работает корзина" aria-expanded="false">?</button></h3>
+      <h3 class="h-help">Корзина${qhelp("Корзина","Удалённые карты лежат здесь, пока ты сам не удалишь их навсегда.")}</h3>
       ${del.length?`<ul class="tlist">${del.map(c=>{
         return `<li class="titem"><span class="mini" style="${cardVars(c)};background-size:cover;background-position:center"></span><strong>${esc(c.bank)}${c.label?" · "+esc(c.label):""}</strong>
         <span>Удалена ${esc(relTime(c.deletedAt))}</span>
@@ -160,7 +158,6 @@ function openTrash(){
   draw(); document.body.appendChild(s);
   s.addEventListener("click",async e=>{
     if(e.target===s||e.target.closest("[data-x]")) return s.remove();
-    if(e.target.closest("[data-help]")) return helpPop(e.target.closest("[data-help]"), "Корзина", "Удалённые карты лежат здесь, пока ты сам не удалишь их навсегда.");
     const r=e.target.closest("[data-restore]"); if(r){ await restoreCard(r.dataset.restore); toast("Карта вернулась в кошелёк"); draw(); if(!allCards.some(c=>c.deletedAt)) s.remove(); return; }
     const p=e.target.closest("[data-purge]"); if(p){
       if(!p.classList.contains("armed")){ p.classList.add("armed"); p.textContent="Точно? Вернуть будет нельзя"; return; }

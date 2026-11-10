@@ -218,15 +218,13 @@ function openShop(name="", isNew){
       <label class="chk"><input type="checkbox" id="shNone"> У магазина нет своей карты</label>
       <p class="note" id="shHint" style="margin:0" hidden></p></div>
     <div class="fl"><label for="shP">Бонусы по карте магазина, %</label><input class="in" id="shP" inputmode="decimal" placeholder="Например, 5 (можно оставить пустым)"></div>
-    <div class="fl" id="shFavBox"><span class="lab">Любимое на ${esc(monthOnly(nowMonth()))}</span>
-      <p class="note" style="margin:0">Любимые категории и товары, которые ты выбрал в приложении магазина на этот месяц.</p>
+    <div class="fl" id="shFavBox"><span class="lab lab-h">Любимое на ${esc(monthOnly(nowMonth()))}${qhelp("Любимое","Любимые категории и товары, которые ты выбрал в приложении магазина на этот месяц.")}</span>
       <span class="sublab">Любимые категории</span><div class="favrows" id="shCats"></div>
       <button type="button" class="btn ghost addrow" data-add="cats">+ Категория</button>
       <span class="sublab">Любимые товары</span><div class="favrows" id="shGoods"></div>
       <button type="button" class="btn ghost addrow" data-add="goods">+ Товар</button>
       <p class="note warn" id="shFavStale" hidden></p></div>
-    <div class="fl" id="shDealBox"><span class="lab">Акции и скидки</span>
-      <p class="note" style="margin:0">Скидка на конкретный товар, например «Шоколад Alpen Gold — 30% до 15 ноября». Дату можно не ставить.</p>
+    <div class="fl" id="shDealBox"><span class="lab lab-h">Акции и скидки${qhelp("Акции и скидки","Скидка на конкретный товар, например «Шоколад Alpen Gold — 30% до 15 ноября». Дату можно не ставить.")}</span>
       <div class="favrows" id="shDeals"></div>
       <button type="button" class="btn ghost addrow" id="shAddDeal">+ Акция</button></div>
     <div class="acts"><div>${isNew?"":`<button type="button" class="btn danger" id="shDel">Удалить</button>`}</div>
@@ -313,8 +311,7 @@ function openBankOffer(name, cardId){
   const cur=(card.shops||[]).find(x=>norm(x.n)===norm(name)); if(!cur) return;
   const s=document.createElement("div"); s.className="scrim"; s.id="scrim";
   s.innerHTML=`<form class="sheet" id="boForm" role="dialog" aria-modal="true" aria-label="Предложение банка">
-    <h3>${esc(card.bank)} в «${esc(cur.n)}»</h3>
-    <p class="note" style="margin:0">Повышенный кешбек банка в этом магазине. Новые такие предложения добавляются в саму карту банка, а здесь — карты магазинов.</p>
+    <h3 class="h-help">${esc(card.bank)} в «${esc(cur.n)}»${qhelp("Кешбек банка в магазине","Повышенный кешбек банка в этом магазине. Новые такие предложения добавляются в саму карту банка, а здесь — карты магазинов.")}</h3>
     <div class="fl"><label for="boP">Кешбек, %</label><input class="in" id="boP" inputmode="decimal" value="${esc(String(cur.p).replace(".",","))}"></div>
     <div class="acts"><div><button type="button" class="btn danger" id="boDel">Удалить</button></div>
       <div><button type="button" class="btn ghost" id="boCancel">Отмена</button><button type="submit" class="btn primary">Сохранить</button></div></div></form>`;
