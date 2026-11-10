@@ -28,14 +28,14 @@ function showWelcome(){
       t: "Магазины и акции", d: "Карты лояльности, любимые категории и скидки — рядом." }
   ];
   const w = document.createElement("div"); w.className = "welcome"; w.setAttribute("role","dialog"); w.setAttribute("aria-modal","true"); w.setAttribute("aria-label","Добро пожаловать");
-  w.innerHTML = `<button type="button" class="wl-skip">Пропустить</button>
+  w.innerHTML = `<div class="wl-top"><span class="ob-count" aria-live="polite">1 из ${slides.length}</span><button type="button" class="wl-skip">Пропустить</button></div>
     <div class="wl-track">${slides.map(s => `<section class="wl-slide"><div class="wl-art">${s.art}</div><h2>${s.t}</h2><p>${s.d}</p></section>`).join("")}</div>
     <div class="wl-foot"><div class="wl-dots">${slides.map((_, i) => `<i${i ? "" : ' class="on"'}></i>`).join("")}</div>
       <button type="button" class="btn primary wl-next">Дальше</button></div>`;
   document.body.appendChild(w);
   const trk = w.querySelector(".wl-track"), next = w.querySelector(".wl-next"), dots = [...w.querySelectorAll(".wl-dots i")];
   const idx = () => Math.round(trk.scrollLeft / trk.clientWidth);
-  const sync = () => { const i = idx(); dots.forEach((d, k) => d.classList.toggle("on", k === i)); next.textContent = i === slides.length - 1 ? "Начать" : "Дальше"; };
+  const sync = () => { const i = idx(); dots.forEach((d, k) => d.classList.toggle("on", k === i)); next.textContent = i === slides.length - 1 ? "Начать" : "Дальше"; w.querySelector(".ob-count").textContent = `${i + 1} из ${slides.length}`; };
   trk.addEventListener("scroll", sync, { passive: true });
   const finish = () => {
     lsMark(WELCOME_KEY); track("welcome_done");
@@ -95,7 +95,7 @@ function startTour(){
   if(!steps.length) return;
   lsMark(TOUR_KEY);
   const t = document.createElement("div"); t.className = "tour";
-  t.innerHTML = `<div class="tour-hole"></div><div class="tour-pop hpop"><p></p><div class="tour-acts"><button type="button" class="tour-skip">Пропустить</button><button type="button" class="btn primary tour-next">Дальше</button></div></div>`;
+  t.innerHTML = `<div class="tour-hole"></div><div class="tour-pop hpop"><p></p><div class="tour-acts"><span class="tour-left"><button type="button" class="tour-skip">Пропустить</button><span class="ob-count" aria-live="polite"></span></span><button type="button" class="btn primary tour-next">Дальше</button></div></div>`;
   document.body.appendChild(t);
   const hole = t.querySelector(".tour-hole"), pop = t.querySelector(".tour-pop"), next = t.querySelector(".tour-next");
   t.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
@@ -107,6 +107,7 @@ function startTour(){
     Object.assign(hole.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px", borderRadius: rad });
     pop.querySelector("p").textContent = s.t;
     next.textContent = i === steps.length - 1 ? "Понятно" : "Дальше";
+    t.querySelector(".ob-count").textContent = `${i + 1} из ${steps.length}`;
     const ph = pop.offsetHeight, below = r.bottom + 16 + ph < innerHeight - 12;
     pop.style.top = (below ? r.bottom + 16 : Math.max(12, r.top - 16 - ph)) + "px";
     if(!reduceMo()) pop.animate([{ opacity: 0, transform: `translateY(${below ? -6 : 6}px)` }, { opacity: 1, transform: "none" }], { duration: 240, easing: "cubic-bezier(.2,.9,.3,1)" });

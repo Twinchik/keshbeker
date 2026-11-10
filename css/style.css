@@ -495,7 +495,10 @@ html.scroll-lock,html.scroll-lock body{overflow:hidden!important}
 /* ===== помощь новичкам (onboarding.js) ===== */
 /* приветствие: три экрана, листаются пальцем */
 .welcome{position:fixed;inset:0;z-index:900;background:var(--bg);display:flex;flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 0 max(20px,env(safe-area-inset-bottom))}
-.wl-skip{align-self:flex-end;margin-right:16px;border:0;background:none;color:var(--muted);font:inherit;font-size:15px;padding:8px 4px;cursor:pointer}
+.wl-top{display:flex;justify-content:space-between;align-items:center;padding:0 16px 0 24px}
+.ob-count{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.tour-left{display:flex;align-items:center;gap:10px}
+.wl-skip{border:0;background:none;color:var(--muted);font:inherit;font-size:15px;padding:8px 4px;cursor:pointer}
 .wl-track{flex:1;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain}
 .wl-track::-webkit-scrollbar{display:none}
 .wl-slide{flex:0 0 100%;scroll-snap-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;gap:12px}
