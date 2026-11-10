@@ -182,7 +182,7 @@ function shopItemHTML(g){
     const dealsHTML = act.length ? `<div class="favs"><button type="button" class="fav-h" data-edit-shop="${esc(g.n)}">Акции</button><div class="fchips">${act.map(x=>`<span class="fchip sale">${esc(x.n)} <b>−${fmtP(x.d)}</b>${x.until?` <small>до ${esc(fmtDay(x.until))}</small>`:""}</span>`).join("")}</div></div>` : "";
     // свой магазин — вся рамка нажимается и открывает его настройки
     const tap = o ? ` data-edit-shop="${esc(g.n)}" role="button" tabindex="0" aria-label="Изменить ${esc(g.n)}"` : "";
-    return `<li class="shop${o?" tap":""}"${tap}><div class="shop-h"><strong>${esc(g.n)}</strong></div>${own}${favs}${dealsHTML}${offers}</li>`;
+    return `<li class="shop${o?" tap":""}"${tap}>${o&&o.prog?"":`<div class="shop-h"><strong>${esc(g.n)}</strong></div>`}${own}${favs}${dealsHTML}${offers}</li>`;
 }
 $("#shopQ").addEventListener("input",renderShops);
 $("#shopList").addEventListener("click",e=>{
