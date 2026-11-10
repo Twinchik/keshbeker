@@ -220,7 +220,7 @@ function openShop(name="", isNew){
     <div class="fl"><span class="lab">Фото карты магазина</span>
       <div class="ph"><div class="lprev ph-shop" id="shPrev" aria-hidden="true"><span class="lc-prog" id="shPrevName"></span><span class="lc-p" id="shPrevP"></span></div>
         <div class="ph-btns">
-          <label class="btn" for="shCam">Сфотографировать<input class="vh" id="shCam" type="file" accept="image/*" capture="environment"></label>
+          <label class="btn" for="shCam">Сфоткать<input class="vh" id="shCam" type="file" accept="image/*" capture="environment"></label>
           <label class="btn" for="shGal">Из галереи<input class="vh" id="shGal" type="file" accept="image/*"></label>
           <button type="button" class="btn ghost" id="shPhDel" hidden>Убрать фото</button></div></div></div>
     <div class="fl" id="shLook"><span class="lab" id="shColorLab">Цвет</span>

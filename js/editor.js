@@ -16,7 +16,7 @@ function openEditor(card, startTab="cur"){
     <div class="fl"><span class="lab">Фото карты</span>
       <div class="ph"><div class="ph-prev" id="edPhPrev" aria-hidden="true"></div>
         <div class="ph-btns">
-          <label class="btn" for="edCam">Сфотографировать<input class="vh" id="edCam" type="file" accept="image/*" capture="environment"></label>
+          <label class="btn" for="edCam">Сфоткать<input class="vh" id="edCam" type="file" accept="image/*" capture="environment"></label>
           <label class="btn" for="edGal">Из галереи<input class="vh" id="edGal" type="file" accept="image/*"></label>
           <button type="button" class="btn ghost" id="edPhDel" hidden>Убрать фото</button>
         </div></div>
