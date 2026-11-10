@@ -146,7 +146,7 @@ function productHTML(q){
   return `<li class="pres-h">Где выгоднее: «${esc(q.trim())}»</li>`+hits.map((h,i)=>{
     const what=[h.deal?`${esc(h.deal.n)}${h.deal.until?` · до ${esc(fmtDay(h.deal.until))}`:""}`:"", h.fav?(h.deal&&norm(h.deal.n)===norm(h.fav.n)?`любимый товар`:`${esc(h.fav.n)} (любимый ${h.fav.kind==="товар"?"товар":"раздел"})`):""].filter(Boolean).join(" · ");
     const parts=[h.d?`<span class="part sale">Скидка ${fmtP(h.d)}</span>`:"",
-      h.b?`<span class="part">${esc(h.sh.prog||"Карта магазина")} ${fmtP(h.b)}</span>`:"",
+      h.b?`<span class="part">Карта ${esc(h.sh.n)} ${fmtP(h.b)}</span>`:"",
       h.bank&&h.c?`<span class="part"><i style="${cardVars(h.bank.card)}"></i>${esc(h.bank.card.bank)} ${fmtP(h.c)}${h.bank.base?" · на всё":""}</span>`:""].join("");
     // кешбек только за доставку — отдельной строкой, чтобы не путать с покупкой в магазине
     const deliv = h.del ? `<div class="pr-deliv"><span class="part deliv"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/></svg><i style="${cardVars(h.del.card)}"></i>${esc(h.del.card.bank)} ${fmtP(h.dc)} · только доставка</span><span class="pr-dtotal">с доставкой ≈ ${fmtP(h.dtotal)}</span></div>` : "";
@@ -167,7 +167,7 @@ function renderShops(){
 function shopItemHTML(g){
     const o=g.own;
     const own = o ? (o.prog
-        ? `<button type="button" class="lcard${o.photo?" photo":""}" data-edit-shop="${esc(g.n)}" style="${shopVars(o,g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">${esc(o.prog)}</span><span class="lc-p">${o.p!=null?fmtP(o.p):"карта"}</span></button>`
+        ? `<button type="button" class="lcard${o.photo?" photo":""}" data-edit-shop="${esc(g.n)}" style="${shopVars(o,g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">${esc(g.n)}</span><span class="lc-p">${o.p!=null?fmtP(o.p):"карта"}</span></button>`
         : `<button type="button" class="lcard none" data-edit-shop="${esc(g.n)}" aria-label="Изменить ${esc(g.n)}"><span class="lc-prog">Без своей карты</span><span class="lc-p">${o.p!=null?fmtP(o.p):""}</span></button>`)
       : `<button type="button" class="offer add" data-newshop="${esc(g.n)}">+ карта магазина</button>`;
     const offers = g.offers.length ? `<div class="offers"><span class="off-lbl">Банки:</span>${g.offers.map(x=>`<button type="button" class="offer" data-shop="${esc(x.n)}" data-card="${x.card.id}" aria-label="${esc(x.card.bank)} ${fmtP(x.p)}"><i style="${cardVars(x.card)}"></i>${esc(x.card.bank)} <b>${fmtP(x.p)}</b></button>`).join("")}</div>` : "";
@@ -208,7 +208,7 @@ $("#shopList").addEventListener("pointerdown",e=>{
     setTimeout(()=>{ rip.classList.add("out"); setTimeout(()=>rip.remove(),350); }, Math.max(0,250-(performance.now()-t0))); };
   addEventListener("pointerup",end); addEventListener("pointercancel",end);
 });
-// добавить / изменить магазин: название → карта магазина подставляется сама
+// добавить / изменить магазин: на карте магазина пишется его название
 function openShop(name="", isNew){
   const ld=looseDoc(); const cur=(ld.shops||[]).find(x=>norm(x.n)===norm(name||"")) || null;
   if(isNew===undefined) isNew=!cur;
@@ -217,11 +217,8 @@ function openShop(name="", isNew){
     <h3>${isNew?"Новый магазин":"Изменить магазин"}</h3>
     <div class="fl"><label for="shName">Магазин</label><input class="in" id="shName" required maxlength="40" list="shopNames" placeholder="Пятёрочка"></div>
     <datalist id="shopNames">${MERCHANTS.map(([n])=>`<option value="${esc(n[0])}">`).join("")}</datalist>
-    <div class="fl"><label for="shProg">Карта магазина</label>
-      <div class="lprev" id="shPrev"><span class="lc-prog" id="shPrevName"></span><span class="lc-p" id="shPrevP"></span></div>
-      <input class="in" id="shProg" maxlength="40" placeholder="Название карты, например Х5 Клуб">
-      <label class="chk"><input type="checkbox" id="shNone"> У магазина нет своей карты</label>
-      <p class="note" id="shHint" style="margin:0" hidden></p></div>
+    <div class="fl"><span class="lab">Карта магазина</span>
+      <div class="lprev" id="shPrev"><span class="lc-prog" id="shPrevName"></span><span class="lc-p" id="shPrevP"></span></div></div>
     <div class="fl" id="shLook"><span class="lab">Фото карты</span>
       <div class="ph-btns">
         <label class="btn" for="shCam">Сфотографировать<input class="vh" id="shCam" type="file" accept="image/*" capture="environment"></label>
@@ -243,8 +240,7 @@ function openShop(name="", isNew){
       <div><button type="button" class="btn ghost" id="shCancel">Отмена</button><button type="submit" class="btn primary">Сохранить</button></div></div>
   </form>`;
   document.body.appendChild(s);
-  let progTouched=!!cur;   // если человек сам поправил название карты — больше не подменяем
-  const nameEl=$("#shName"), progEl=$("#shProg"), noneEl=$("#shNone"), hint=$("#shHint");
+  const nameEl=$("#shName");   // на карте магазина написано название магазина
   // вид карты магазина — как у банковских карт: фото, готовые цвета или свой цвет
   const look={photo:cur?.photo||null, custom:cur?.custom||null, style:cur?.style||""};
   const drawLook=()=>{
@@ -257,27 +253,11 @@ function openShop(name="", isNew){
     own.setAttribute("aria-pressed", isOwn); own.setAttribute("style", isOwn ? styleVars(look.style) : "");
   };
   const drawPrev=()=>{
-    const none=noneEl.checked; progEl.disabled=none;
-    $("#shPrev").classList.toggle("none",none); $("#shLook").hidden=none;
     $("#shPrev").classList.toggle("photo",!!look.photo);
     $("#shPrev").setAttribute("style", shopVars(look, nameEl.value||"магазин"));
     drawLook();
-    $("#shPrevName").textContent = none ? "Без своей карты" : (progEl.value.trim() || "Карта магазина");
+    $("#shPrevName").textContent = nameEl.value.trim() || "Магазин";
     const p=$("#shP").value.trim(); $("#shPrevP").textContent = p ? fmtP(cleanP(p)) : "";
-  };
-  const autofill=()=>{
-    const info=loyaltyFor(nameEl.value);
-    if(!info){ hint.hidden=true; drawPrev(); return; }
-    if(!progTouched){
-      if(info.prog===""){ noneEl.checked=true; progEl.value=""; }
-      else if(info.prog){ noneEl.checked=false; progEl.value=info.prog; }
-      else { noneEl.checked=false; progEl.value=`Карта ${info.canon}`; }
-    }
-    hint.hidden=false;
-    hint.textContent = info.prog==="" ? `Похоже, у «${info.canon}» нет своей карты — кешбек там будет только от банка.`
-      : info.prog ? `Карта подставилась сама: «${info.prog}». Если у тебя другая — поправь название.`
-      : `Точное название карты «${info.canon}» мы не знаем — поправь, если нужно.`;
-    drawPrev();
   };
   // любимые категории и товары на текущий месяц; старые месяцы показываем как прошлые
   const nm=nowMonth(); const oldFav=cur&&cur.fav;
@@ -300,11 +280,9 @@ function openShop(name="", isNew){
   $("#shAddDeal").onclick=()=>{ syncDeals(); deals.push({n:"",d:"",until:""}); drawDeals(); const r=$("#shDeals").querySelectorAll("[data-f=n]"); r[r.length-1]?.focus(); };
   $("#shDeals").addEventListener("click",e=>{ const b=e.target.closest("[data-rmdeal]"); if(!b) return; syncDeals(); deals.splice(+b.closest(".erow").dataset.i,1); drawDeals(); });
   drawDeals();
-  nameEl.value=cur?cur.n:(name||""); progEl.value=cur?(cur.prog||""):""; noneEl.checked=!!cur && !cur.prog; $("#shP").value=cur&&cur.p!=null?String(cur.p).replace(".",","):"";
-  if(!cur) autofill(); else drawPrev();
-  nameEl.addEventListener("input",autofill);
-  progEl.addEventListener("input",()=>{ progTouched=true; drawPrev(); });
-  noneEl.addEventListener("change",()=>{ progTouched=true; drawPrev(); });
+  nameEl.value=cur?cur.n:(name||""); $("#shP").value=cur&&cur.p!=null?String(cur.p).replace(".",","):"";
+  drawPrev();
+  nameEl.addEventListener("input",drawPrev);
   $("#shP").addEventListener("input",drawPrev);
   setTimeout(()=>(nameEl.value?$("#shP"):nameEl).focus(),50);
   const close=()=>s.remove();
@@ -315,7 +293,7 @@ function openShop(name="", isNew){
   const others=()=>(looseDoc().shops||[]).filter(x=>!cur || norm(x.n)!==norm(cur.n));
   if($("#shDel")) $("#shDel").onclick=async()=>{ close(); await save(others()); };
   $("#shSw").onclick=async e=>{
-    if(e.target.closest("#shOwn")){ const hex=await openColorPicker(isOwnColor(look.style)?look.style:"#e8475a", progEl.value.trim()||"Карта магазина"); if(!hex) return;
+    if(e.target.closest("#shOwn")){ const hex=await openColorPicker(isOwnColor(look.style)?look.style:"#e8475a", nameEl.value.trim()||"Магазин"); if(!hex) return;
       look.style=hex; look.custom=null; drawPrev(); return; }
     const b=e.target.closest("[data-st]"); if(!b) return; look.style=b.dataset.st; look.custom=null; drawPrev(); };
   const onShopFile=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
@@ -331,7 +309,7 @@ function openShop(name="", isNew){
     syncFav();
     const clean=a=>a.filter(x=>String(x.n||"").trim()).map(x=>({n:String(x.n).trim(), p: String(x.p||"").trim()?cleanP(x.p):null}));
     const fv={month:nm, cats:clean(fav.cats), goods:clean(fav.goods)};
-    const entry={n, prog: noneEl.checked ? "" : (progEl.value.trim()||`Карта ${n}`), p: pv ? cleanP(pv) : null,
+    const entry={n, prog: n, p: pv ? cleanP(pv) : null,
       fav: (fv.cats.length||fv.goods.length) ? fv : (oldFav && oldFav.month!==nm ? oldFav : null),
       // акции: пустые строки отбрасываем, давно закончившиеся (больше 30 дней назад) — тоже
       deals: (syncDeals(), deals.filter(x=>String(x.n||"").trim() && String(x.d||"").trim()).map(x=>({n:String(x.n).trim(), d:cleanP(x.d), until:x.until||""}))
