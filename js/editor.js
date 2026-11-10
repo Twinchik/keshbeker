@@ -146,11 +146,12 @@ function toast(text, act, fn){
 function openTrash(){
   document.querySelector(".toast")?.remove();
   const s=document.createElement("div"); s.className="scrim"; s.id="scrim";
+  let helpOpen=false;   // пояснение спрятано под «?» рядом с заголовком
   const draw=()=>{
     const del=allCards.filter(c=>c.deletedAt).sort((a,b)=>b.deletedAt-a.deletedAt);
     s.innerHTML=`<div class="sheet" role="dialog" aria-modal="true" aria-label="Корзина">
-      <h3>Корзина</h3>
-      <p class="note" style="margin:0">Удалённые карты лежат здесь, пока ты сам не удалишь их навсегда.</p>
+      <h3 class="h-help">Корзина<button type="button" class="qhelp" data-help aria-label="Как работает корзина" aria-expanded="${helpOpen}">?</button></h3>
+      <p class="note help-note" style="margin:0"${helpOpen?"":" hidden"}>Удалённые карты лежат здесь, пока ты сам не удалишь их навсегда.</p>
       ${del.length?`<ul class="tlist">${del.map(c=>{
         return `<li class="titem"><span class="mini" style="${cardVars(c)};background-size:cover;background-position:center"></span><strong>${esc(c.bank)}${c.label?" · "+esc(c.label):""}</strong>
         <span>Удалена ${esc(relTime(c.deletedAt))}</span>
@@ -161,6 +162,7 @@ function openTrash(){
   draw(); document.body.appendChild(s);
   s.addEventListener("click",async e=>{
     if(e.target===s||e.target.closest("[data-x]")) return s.remove();
+    if(e.target.closest("[data-help]")){ helpOpen=!helpOpen; const n=s.querySelector(".help-note"); n.hidden=!helpOpen; e.target.closest("[data-help]").setAttribute("aria-expanded",helpOpen); return; }
     const r=e.target.closest("[data-restore]"); if(r){ await restoreCard(r.dataset.restore); toast("Карта вернулась в кошелёк"); draw(); if(!allCards.some(c=>c.deletedAt)) s.remove(); return; }
     const p=e.target.closest("[data-purge]"); if(p){
       if(!p.classList.contains("armed")){ p.classList.add("armed"); p.textContent="Точно? Вернуть будет нельзя"; return; }

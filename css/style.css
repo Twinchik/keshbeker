@@ -419,6 +419,12 @@ body.reordering{-webkit-user-select:none;user-select:none}
 .sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:rise .3s cubic-bezier(.2,.8,.2,1)}
 @media (min-width:640px){.scrim{align-items:center}.sheet{border-radius:22px;max-height:88%}}
 .sheet h3{font-family:var(--display);font-size:18px;margin:0}
+/* заголовок с кнопкой «?», под которой спрятано пояснение */
+.h-help{display:flex;align-items:center;gap:10px}
+.qhelp{width:24px;height:24px;flex:none;border-radius:50%;border:1.5px solid var(--muted);background:transparent;color:var(--muted);font-family:inherit;font-weight:700;font-size:13px;line-height:1;display:grid;place-items:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s,color .2s,border-color .2s}
+.qhelp[aria-expanded="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.help-note:not([hidden]){animation:helpIn .22s cubic-bezier(0,0,.2,1)}
+@keyframes helpIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 /* обрезка аватарки */
 .crop-stage{position:relative;width:min(300px,100%);aspect-ratio:1;margin:4px auto 0;overflow:hidden;border-radius:16px;background:#000;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
 .crop-stage.drag{cursor:grabbing}
