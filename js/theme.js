@@ -256,3 +256,15 @@ document.addEventListener("click", e => {
   e.preventDefault(); e.stopPropagation();
   helpPop(b, b.dataset.t, b.dataset.x);
 }, true);
+
+// Пока открыто любое окно (редактор, профиль, магазин, корзина…), страница под ним не листается.
+function syncScrollLock(){
+  const open = !!document.querySelector(".scrim, .hpop-catch");
+  document.documentElement.classList.toggle("scroll-lock", open);
+}
+new MutationObserver(syncScrollLock).observe(document.body, { childList: true });
+// палец на затемнённом фоне вокруг окна — ничего не прокручиваем
+document.addEventListener("touchmove", e => {
+  if(e.target.classList?.contains("scrim") || e.target.classList?.contains("hpop-catch")) e.preventDefault();
+}, { passive: false });
+syncScrollLock();

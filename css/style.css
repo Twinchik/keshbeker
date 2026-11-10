@@ -416,6 +416,9 @@ body.reordering{-webkit-user-select:none;user-select:none}
 
 /* sheet */
 .scrim{position:fixed;inset:0;background:rgba(8,10,14,.45);display:flex;align-items:flex-end;justify-content:center;z-index:500;animation:fade .2s}
+/* пока открыто окно, фон не листается (см. syncScrollLock в theme.js); прокрутка окна не «перетекает» на страницу */
+html.scroll-lock,html.scroll-lock body{overflow:hidden!important}
+.scrim,.sheet{overscroll-behavior:contain}
 .sheet{background:var(--surface);width:100%;max-width:520px;max-height:92%;overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:rise .3s cubic-bezier(.2,.8,.2,1)}
 @media (min-width:640px){.scrim{align-items:center}.sheet{border-radius:22px;max-height:88%}}
 .sheet h3{font-family:var(--display);font-size:18px;margin:0}
