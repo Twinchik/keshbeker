@@ -103,6 +103,7 @@ $("#acctBtn").addEventListener("click",()=>{
       : qhelp("Без входа","Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, в аккаунт не переносятся — они остаются в режиме без входа на этом устройстве.")}</p>
     <div class="acct-theme">${themeSwitchHTML()}</div>
     <button type="button" class="install-btn wide" data-install hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Установить приложение</button>
+    <button type="button" class="link-btn" id="replayHelp">Показать подсказки для новичков</button>
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
   document.body.appendChild(s);
@@ -113,7 +114,8 @@ $("#acctBtn").addEventListener("click",()=>{
   fillAvatar($("#bigAv")); wireAvatar(s); refreshInstallUI();
   s.addEventListener("click",e=>{ if(e.target===s||e.target.id==="acctClose") s.remove();
     if(e.target.id==="signOut"){ s.remove(); signOut(); }
-    if(e.target.id==="toLogin"){ s.remove(); loginFromGuest(); } });
+    if(e.target.id==="toLogin"){ s.remove(); loginFromGuest(); }
+    if(e.target.id==="replayHelp"){ s.remove(); replayOnboarding(); } });
   s.addEventListener("keydown",e=>{ if(e.key==="Escape") s.remove(); });
 });
 const plural=(n,f)=>f[(n%10===1&&n%100!==11)?0:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?1:2];
@@ -169,9 +171,11 @@ function startSynced(){
     remove:async id=>{ writeLS(allCards); try{ await col.doc(id).delete(); }catch(e){ setStatus("Не удалилось: "+(e?.message||"нет связи")); } }
   };
   render();
+  let firstSnap=true;
   unsub=col.onSnapshot(snap=>{
     setAll(applyOrderOverride(snap.docs.map(d=>({...d.data(),id:d.id}))));
     applyRoll(); writeLS(allCards); drawAvatar(); hideSplash();
+    if(firstSnap){ firstSnap=false; setTimeout(maybeWelcome,300); }   // приветствие — только когда уже известно, есть ли у аккаунта карты
     if(editing) return; render();
   }, e=>setStatus("Нет связи с базой: "+(e.message||e)+". Проверь интернет или VPN."));
 }
@@ -186,6 +190,7 @@ function startGuest(){
   store={ save:async()=>writeLS(allCards), remove:async()=>writeLS(allCards) };
   applyRoll(); writeLS(allCards); render();
   setStatus("Без входа карты хранятся только в этом браузере");
+  maybeWelcome();
 }
 async function signOut(){
   unsub?.(); unsub=null; store=null;

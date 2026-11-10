@@ -260,12 +260,12 @@ document.addEventListener("click", e => {
 
 // Пока открыто любое окно (редактор, профиль, магазин, корзина…), страница под ним не листается.
 function syncScrollLock(){
-  const open = !!document.querySelector(".scrim, .hpop-catch");
+  const open = !!document.querySelector(".scrim, .hpop-catch, .welcome, .tour");
   document.documentElement.classList.toggle("scroll-lock", open);
 }
 new MutationObserver(syncScrollLock).observe(document.body, { childList: true });
 // палец на затемнённом фоне вокруг окна — ничего не прокручиваем
 document.addEventListener("touchmove", e => {
-  if(e.target.classList?.contains("scrim") || e.target.classList?.contains("hpop-catch")) e.preventDefault();
+  if(e.target.classList?.contains("scrim") || e.target.classList?.contains("hpop-catch") || e.target.closest?.(".tour")) e.preventDefault();
 }, { passive: false });
 syncScrollLock();

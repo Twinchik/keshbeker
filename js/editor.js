@@ -9,6 +9,7 @@ function openEditor(card, startTab="cur"){
   const s=document.createElement("div"); s.className="scrim"; s.id="scrim";
   s.innerHTML=`<form class="sheet" id="edForm" autocomplete="off" role="dialog" aria-modal="true" aria-label="Карта">
     <h3>${editing.isNew?"Новая карта":"Изменить карту"}</h3>
+    ${editing.isNew?`<div class="bank-picks" id="edPicks" aria-label="Быстрый выбор банка">${BANK_PICKS.map(([n,c])=>`<button type="button" data-bank="${esc(n)}" data-c="${c}"><i style="${styleVars(c)}"></i>${esc(n)}</button>`).join("")}</div>`:""}
     <div class="two">
       <div class="fl"><label for="edBank">Банк</label><input class="in" id="edBank" required maxlength="30" placeholder="Т-Банк" value="${esc(editing.bank)}"></div>
       <div class="fl"><label for="edLabel">Подпись</label><input class="in" id="edLabel" maxlength="20" placeholder="Black" value="${esc(editing.label)}"></div>
@@ -26,7 +27,7 @@ function openEditor(card, startTab="cur"){
       <div class="seg" role="tablist" id="edSeg"><button type="button" role="tab" data-tab="cur">Сейчас<small>${esc(monthOnly(nowMonth()))}</small></button><button type="button" role="tab" data-tab="next">Следующий<small>${esc(monthOnly(addMonth(nowMonth())))}</small></button></div>
       <div id="edRows" style="display:flex;flex-direction:column;gap:6px"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="edAdd">+ Строка</button><button type="button" class="btn ghost" id="edCopy">Скопировать из текущего</button><button type="button" class="btn ghost danger" id="edClearNext">Очистить месяц</button></div></div>
-    <datalist id="commonCats">${COMMON.map(c=>`<option value="${c}">`).join("")}</datalist>
+
     <div class="acts"><div>${editing.isNew?"":`<button type="button" class="btn danger" id="edDel">В корзину</button>`}</div>
       <div><button type="button" class="btn ghost" id="edCancel">Отмена</button><button type="submit" class="btn primary">Сохранить</button></div></div>
   </form>`;
@@ -55,6 +56,14 @@ function openEditor(card, startTab="cur"){
   $("#edCancel").onclick=closeEditor;
   $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("#edOwn").setAttribute("aria-pressed","false"); drawPhoto();};
   // свой цвет: своя палитра с кнопками «Отмена» и «Готово»
+  // быстрый выбор банка: название и цвет карты одним нажатием
+  $("#edPicks")?.addEventListener("click",e=>{ const b=e.target.closest("[data-bank]"); if(!b) return;
+    $("#edBank").value=b.dataset.bank; $("#edBank").dispatchEvent(new Event("input",{bubbles:true}));
+    const c=b.dataset.c; editing.style=c; editing.custom=null;
+    $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.st===c));
+    const own=$("#edOwn"), isOwn=isOwnColor(c); own.setAttribute("aria-pressed",isOwn); own.setAttribute("style",isOwn?styleVars(c):"");
+    $("#edPicks").querySelectorAll("[data-bank]").forEach(x=>x.setAttribute("aria-pressed",x===b)); drawPhoto(); track("bank_pick",{b:b.dataset.bank});
+    setTimeout(()=>$("#edN0")?.focus(),60); });
   $("#edOwn").onclick=async()=>{
     const hex=await openColorPicker(isOwnColor(editing.style)?editing.style:"#e8475a", $("#edBank").value.trim()||"Карта"); if(!hex) return; track("own_color");
     editing.style=hex; editing.custom=null;
@@ -81,8 +90,8 @@ function openEditor(card, startTab="cur"){
     const keepNext = !editing.next.draft && nextItems.some(i=>!isBase(i.n));
     const c={id:editing.id,bank:$("#edBank").value.trim()||"Карта",label:$("#edLabel").value.trim(),style:editing.style,order:editing.order??0,month:nowMonth(),
       photo:editing.photo||null,custom:editing.custom||null,shops:editing.shops||[],items:cleanItems(editing.items),next: keepNext ? {month:editing.next.month, items:nextItems} : null,sample:false,updatedAt:Date.now()};
-    track(editing.isNew?"card_add":"card_edit"); if(keepNext) track("next_month");
-    closeEditor(); putCard(c); selected=c.id; render(); await store.save(c); };
+    const wasNew=editing.isNew; track(wasNew?"card_add":"card_edit"); if(keepNext) track("next_month");
+    closeEditor(); putCard(c); selected=c.id; render(); if(wasNew) maybeTour(); await store.save(c); };
   s.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#phScrim")) closeEditor(); });
 }
 const curRows=()=> tab==="next" ? editing.next.items : editing.items;
@@ -104,7 +113,7 @@ async function makePhoto(file){
 }
 function drawRows(){
   $("#edRows").innerHTML=curRows().map((it,i)=>`<div class="erow" data-i="${i}">
-    <input class="in" data-f="n" id="edN${i}" list="commonCats" placeholder="Категория" value="${esc(it.n)}" aria-label="Название">
+    <input class="in" data-f="n" id="edN${i}" placeholder="Категория" value="${esc(it.n)}" aria-label="Название">
     <input class="in" data-f="p" id="edP${i}" inputmode="decimal" value="${esc(String(it.p).replace(".",","))}" aria-label="Процент">
     <button type="button" class="x" data-rm="${i}" aria-label="Удалить строку">×</button></div>`).join("");
   $("#edRows").onclick=e=>{const b=e.target.closest("[data-rm]"); if(!b)return; syncRows(); curRows().splice(+b.dataset.rm,1); if(tab==="next") editing.next.draft=false; drawRows();};
