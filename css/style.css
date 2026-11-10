@@ -397,9 +397,9 @@ body.reordering{-webkit-user-select:none;user-select:none}
 .strip-r .lbl{font-size:12px;opacity:.85;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .strip-r .tag{font-size:11px;font-weight:600;border:1px solid currentColor;border-radius:999px;padding:1px 7px;opacity:.8}
 .face{position:relative;flex:1;display:grid;grid-template-columns:auto 1fr;gap:0 clamp(12px,4vw,20px);padding:4px clamp(14px,4.5vw,22px) clamp(12px,3.5vw,18px);min-height:0}
-.emv{width:clamp(34px,10vw,46px);aspect-ratio:1.3;border-radius:7px;background:linear-gradient(135deg,#d9dde2,#a9afb7 45%,#cfd3d8);position:relative;margin-top:6px;opacity:.9}
-.emv::before,.emv::after{content:"";position:absolute;inset:28% 0;border-block:1px solid rgba(0,0,0,.28)}
-.emv::after{inset:0 38%;border-block:0;border-inline:1px solid rgba(0,0,0,.28)}
+/* чип карты — как на картах экрана входа: серебро и контакты с овалом посередине */
+:root{--chip:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23f6f8fa'/%3E%3Cstop offset='.5' stop-color='%23c9ced6'/%3E%3Cstop offset='1' stop-color='%238b939e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='.6' y='.6' width='38.8' height='28.8' rx='6' fill='url%28%23g%29' stroke='%236c737d' stroke-width='.8'/%3E%3Cg fill='none' stroke='%23454b53' stroke-width='.9' stroke-linecap='round'%3E%3Cellipse cx='20' cy='15' rx='5.2' ry='7.2'/%3E%3Cpath d='M20 .8V7.8M20 22.2V29.2M.8 10H11Q14.8 10 15.2 12.2M.8 20H11Q14.8 20 15.2 17.8M39.2 10H29Q25.2 10 24.8 12.2M39.2 20H29Q25.2 20 24.8 17.8'/%3E%3C/g%3E%3C/svg%3E")}
+.emv{width:clamp(34px,10vw,46px);aspect-ratio:4/3;background:var(--chip) center/100% 100% no-repeat;position:relative;margin-top:6px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:clamp(4px,1.4vw,8px) 12px;align-content:start;min-width:0}
 .grid li{display:flex;align-items:baseline;gap:6px;min-width:0}
 .grid li b{font-family:var(--display);font-weight:700;font-size:clamp(13px,3.9vw,17px);font-variant-numeric:proportional-nums;letter-spacing:0;flex:none}
@@ -513,7 +513,7 @@ html.scroll-lock,html.scroll-lock body{overflow:hidden!important}
 .wa-card::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 100% 0,rgba(255,255,255,.35),transparent 55%)}
 .wa-card b{display:block;max-width:calc(100% - 52px);font-family:var(--display);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wa-card span{position:absolute;right:14px;top:12px;font-family:var(--display);font-weight:700;font-size:14px}
-.wa-chip{position:absolute;left:14px;top:46px;width:26px;height:19px;border-radius:5px;background:linear-gradient(135deg,#f3f3f3,#b9b9b9);opacity:.9}
+.wa-chip{position:absolute;left:14px;top:44px;width:28px;height:21px;background:var(--chip) center/100% 100% no-repeat}
 .wa-card em{position:absolute;left:50px;height:6px;border-radius:3px;background:rgba(255,255,255,.55)}
 .wa-card em:nth-of-type(1){top:49px;width:80px}.wa-card em:nth-of-type(2){top:61px;width:56px;opacity:.7}
 .wa-fan .c1{transform:translate(-46px,14px) rotate(-14deg)}
