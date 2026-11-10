@@ -102,8 +102,8 @@ $("#acctBtn").addEventListener("click",()=>{
       ? qhelp("Синхронизация","Твои карты видны только тебе, на любом устройстве, где ты вошёл. Если выйти, карты пропадут с этого устройства, но останутся в аккаунте — после входа они вернутся.")
       : qhelp("Без входа","Войди или зарегистрируйся, чтобы карты не потерялись и были на всех устройствах. Карты, добавленные без входа, в аккаунт не переносятся — они остаются в режиме без входа на этом устройстве.")}</p>
     <div class="acct-theme">${themeSwitchHTML()}</div>
+    <button type="button" class="acct-tips" id="replayHelp" aria-label="Показать подсказки для новичков" title="Подсказки для новичков"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V16h5v-.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/></svg></button>
     <button type="button" class="install-btn wide" data-install hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>Установить приложение</button>
-    <button type="button" class="link-btn" id="replayHelp">Показать подсказки для новичков</button>
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
   document.body.appendChild(s);
@@ -115,7 +115,7 @@ $("#acctBtn").addEventListener("click",()=>{
   s.addEventListener("click",e=>{ if(e.target===s||e.target.id==="acctClose") s.remove();
     if(e.target.id==="signOut"){ s.remove(); signOut(); }
     if(e.target.id==="toLogin"){ s.remove(); loginFromGuest(); }
-    if(e.target.id==="replayHelp"){ s.remove(); replayOnboarding(); } });
+    if(e.target.closest?.("#replayHelp")){ s.remove(); replayOnboarding(); } });
   s.addEventListener("keydown",e=>{ if(e.key==="Escape") s.remove(); });
 });
 const plural=(n,f)=>f[(n%10===1&&n%100!==11)?0:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?1:2];

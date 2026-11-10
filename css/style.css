@@ -117,6 +117,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-v
 /* в окне аккаунта тумблер в правом верхнем углу, на уровне аватарки */
 .acct-sheet{position:relative}
 .acct-theme{position:absolute;top:18px;right:16px;z-index:2}
+/* лампочка слева сверху — заново показать подсказки для новичков */
+.acct-tips{position:absolute;top:18px;left:16px;z-index:2;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;color:var(--ink);
+  border:0;background:var(--g-tint);-webkit-backdrop-filter:blur(10px) saturate(1.8);backdrop-filter:blur(10px) saturate(1.8);box-shadow:inset 0 0 0 1px var(--g-edge),inset 1.5px 1.5px 1px -.5px var(--g-rim),var(--g-shadow);-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){.ts-sky,.ts-knob,.ts-moon,.ts-clouds,.ts-stars{transition:none}}
 .sync{display:flex;align-items:center;gap:8px;justify-content:center;font-size:14px}
 .sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
