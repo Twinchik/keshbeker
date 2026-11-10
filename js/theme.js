@@ -217,6 +217,7 @@ function curtainSwap(box, top, swap, isCurrent = () => true, t = { out: 120, gap
 // Пока оно открыто, остальное не нажимается (фон чуть притемнён); закрыть можно только кнопкой «OK».
 function helpPop(anchor, title, text){
   if(document.querySelector(".hpop-catch")) return;   // одна подсказка за раз
+  track("help", { t: title });
   const catcher = document.createElement("div"); catcher.className = "hpop-catch";
   const pop = document.createElement("div"); pop.className = "hpop"; pop.setAttribute("role","alertdialog"); pop.setAttribute("aria-modal","true"); pop.setAttribute("aria-label", title);
   pop.innerHTML = `<strong></strong><p></p><button type="button" class="btn">OK</button>`;

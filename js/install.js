@@ -41,6 +41,7 @@ function showIOSHelp(){
 
 document.addEventListener("click", async e => {
   if(!e.target.closest("[data-install]")) return;
+  track("install_click");
   if(installPrompt){
     const p = installPrompt; installPrompt = null;
     await p.prompt();

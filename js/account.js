@@ -12,7 +12,7 @@ function hideSplash(){
 }
 setTimeout(hideSplash,8000);   // на всякий случай, если сеть совсем не отвечает
 function showGate(on){ if(on) hideSplash(); $("#gate").hidden=!on; $("#main").style.display=on?"none":"contents"; $("#addBtn").hidden=on; $("#acctBtn").hidden=on; $("#gateTheme").hidden=!on; }
-$("#guestBtn").addEventListener("click",()=>{ startGuest(); });
+$("#guestBtn").addEventListener("click",()=>{ track("guest"); startGuest(); });
 function drawAvatar(){ const b=$("#acctBtn"); b.hidden=false; fillAvatar(b); }
 // своя аватарка хранится отдельной записью "_profile" рядом с картами
 const PROFILE_ID="_profile";
@@ -106,6 +106,7 @@ $("#acctBtn").addEventListener("click",()=>{
     <div class="acts"><div>${account.synced?`<button type="button" class="btn danger" id="signOut">Выйти</button>`:`<button type="button" class="btn primary" id="toLogin">Войти</button>`}</div><div><button type="button" class="btn ghost" id="acctClose">Закрыть</button></div></div>
   </div>`;
   document.body.appendChild(s);
+  $("#acctName").classList.add("ym-hide-content");
   $("#acctName").textContent = account.synced ? (v?.email||"Твой аккаунт") : "Гость";
   $("#acctSub").textContent = account.synced ? "" : "Ты не вошёл в аккаунт";
   $("#acctSub").hidden = account.synced;
@@ -160,7 +161,7 @@ function makeCol(){
   };
 }
 function startSynced(){
-  lsDel(GUEST);
+  lsDel(GUEST); trackUser(session.user.id);
   account={viewer:{email:session.user.email}, synced:true}; drawAvatar(); showGate(false); setStatus("");
   const col=makeCol();
   store={
@@ -179,7 +180,7 @@ function loginFromGuest(){
   showGate(true); setTimeout(()=>$("#authEmail").focus(),50);
 }
 function startGuest(){
-  hideSplash();
+  hideSplash(); trackUser(deviceId());
   if(!isGuest()){ lsSet(GUEST,"1"); setAll(readLS()||[]); }   // вернулись в режим без входа — достаём его карты
   account={viewer:null, synced:false}; drawAvatar(); showGate(false);
   store={ save:async()=>writeLS(allCards), remove:async()=>writeLS(allCards) };
@@ -240,10 +241,12 @@ $("#authForm").addEventListener("submit",async e=>{
     if(authMode==="up"){
       const {data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:location.origin+location.pathname}});
       if(error) throw error;
+      track("signup");
       if(!data.session) authMsg("Готово! Мы отправили письмо на "+email+". Открой его и нажми на ссылку, чтобы подтвердить почту.","ok");
     } else {
       const {error}=await sb.auth.signInWithPassword({email,password:pass});
       if(error) throw error;
+      track("login");
       authMsg("");
     }
   }catch(err){ authMsg(ruErr(err),"err"); }

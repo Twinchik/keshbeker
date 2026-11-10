@@ -4,6 +4,7 @@
 /* ---------- магазины ---------- */
 let view="cards";
 function setView(v){
+  if(v!==view) trackPage(v==="shops"?"shops":"cards");
   view=v;
   $("#viewTabs").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===v));
   $("#cardsView").style.display = v==="cards" ? "contents" : "none";
@@ -292,11 +293,11 @@ function openShop(name="", isNew){
   const others=()=>(looseDoc().shops||[]).filter(x=>!cur || norm(x.n)!==norm(cur.n));
   if($("#shDel")) $("#shDel").onclick=async()=>{ close(); await save(others()); };
   $("#shSw").onclick=async e=>{
-    if(e.target.closest("#shOwn")){ const hex=await openColorPicker(isOwnColor(look.style)?look.style:"#e8475a", nameEl.value.trim()||"Магазин"); if(!hex) return;
+    if(e.target.closest("#shOwn")){ const hex=await openColorPicker(isOwnColor(look.style)?look.style:"#e8475a", nameEl.value.trim()||"Магазин"); if(!hex) return; track("own_color");
       look.style=hex; look.custom=null; drawPrev(); return; }
     const b=e.target.closest("[data-st]"); if(!b) return; look.style=b.dataset.st; look.custom=null; drawPrev(); };
   const onShopFile=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
-    const r=await openPhotoEditor(f); if(!r) return;
+    const r=await openPhotoEditor(f); if(!r) return; track("shop_photo");
     if(r.photo){ look.photo=r.photo; look.custom=null; } else { look.custom=r.custom; look.photo=null; }
     drawPrev(); };
   $("#shCam").onchange=onShopFile; $("#shGal").onchange=onShopFile;
@@ -314,6 +315,7 @@ function openShop(name="", isNew){
       deals: (syncDeals(), deals.filter(x=>String(x.n||"").trim() && String(x.d||"").trim()).map(x=>({n:String(x.n).trim(), d:cleanP(x.d), until:x.until||""}))
         .filter(x=>!x.until || (Date.now()-new Date(x.until+"T23:59:59"))/864e5 < 30)),
       ...(look.photo?{photo:look.photo}:{}), ...(look.custom?{custom:look.custom}:{}), ...(look.style?{style:look.style}:{})};
+    track(isNew?"shop_add":"shop_edit", { deals: (entry.deals||[]).length, fav: !!entry.fav });
     close();
     await save([...others().filter(x=>norm(x.n)!==norm(n)), entry]);
   };

@@ -56,7 +56,7 @@ function openEditor(card, startTab="cur"){
   $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("#edOwn").setAttribute("aria-pressed","false"); drawPhoto();};
   // свой цвет: своя палитра с кнопками «Отмена» и «Готово»
   $("#edOwn").onclick=async()=>{
-    const hex=await openColorPicker(isOwnColor(editing.style)?editing.style:"#e8475a", $("#edBank").value.trim()||"Карта"); if(!hex) return;
+    const hex=await openColorPicker(isOwnColor(editing.style)?editing.style:"#e8475a", $("#edBank").value.trim()||"Карта"); if(!hex) return; track("own_color");
     editing.style=hex; editing.custom=null;
     $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed","false"));
     const own=$("#edOwn"); own.setAttribute("aria-pressed","true"); own.setAttribute("style",styleVars(hex)); drawPhoto(); };
@@ -69,18 +69,19 @@ function openEditor(card, startTab="cur"){
   const drawPrevName=()=>{ $("#edPhName").textContent=$("#edBank").value.trim()||"Банк"; $("#edPhLabel").textContent=$("#edLabel").value.trim(); };
   $("#edBank").addEventListener("input",drawPrevName); $("#edLabel").addEventListener("input",drawPrevName); drawPrevName();
   const onFile=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
-    const r=await openPhotoEditor(f); if(!r) return;
+    const r=await openPhotoEditor(f); if(!r) return; track("card_photo");
     if(r.photo){ editing.photo=r.photo; editing.custom=null; } else { editing.custom=r.custom; editing.photo=null; }
     drawPhoto(); };
   $("#edCam").onchange=onFile; $("#edGal").onchange=onFile;
   $("#edPhDel").onclick=()=>{ editing.photo=null; editing.custom=null; drawPhoto(); };
   $("#edAdd").onclick=()=>{ syncRows(); curRows().push({n:"",p:5}); if(tab==="next") editing.next.draft=false; drawRows(); const ins=$("#edRows").querySelectorAll("input[data-f=n]"); ins[ins.length-1]?.focus(); };
-  const del=$("#edDel"); if(del) del.onclick=()=>{ const id=editing.id; closeEditor(); trashCard(id); };
+  const del=$("#edDel"); if(del) del.onclick=()=>{ const id=editing.id; track("card_trash"); closeEditor(); trashCard(id); };
   $("#edForm").onsubmit=async e=>{ e.preventDefault(); syncRows();
     const nextItems=cleanItems(editing.next.items);
     const keepNext = !editing.next.draft && nextItems.some(i=>!isBase(i.n));
     const c={id:editing.id,bank:$("#edBank").value.trim()||"Карта",label:$("#edLabel").value.trim(),style:editing.style,order:editing.order??0,month:nowMonth(),
       photo:editing.photo||null,custom:editing.custom||null,shops:editing.shops||[],items:cleanItems(editing.items),next: keepNext ? {month:editing.next.month, items:nextItems} : null,sample:false,updatedAt:Date.now()};
+    track(editing.isNew?"card_add":"card_edit"); if(keepNext) track("next_month");
     closeEditor(); putCard(c); selected=c.id; render(); await store.save(c); };
   s.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#phScrim")) closeEditor(); });
 }
@@ -168,7 +169,7 @@ function openTrash(){
   draw(); document.body.appendChild(s);
   s.addEventListener("click",async e=>{
     if(e.target===s||e.target.closest("[data-x]")) return s.remove();
-    const r=e.target.closest("[data-restore]"); if(r){ await restoreCard(r.dataset.restore); toast("Карта вернулась в кошелёк"); draw(); if(!allCards.some(c=>c.deletedAt)) s.remove(); return; }
+    const r=e.target.closest("[data-restore]"); if(r){ track("card_restore"); await restoreCard(r.dataset.restore); toast("Карта вернулась в кошелёк"); draw(); if(!allCards.some(c=>c.deletedAt)) s.remove(); return; }
     const p=e.target.closest("[data-purge]"); if(p){
       if(!p.classList.contains("armed")){ p.classList.add("armed"); p.textContent="Точно? Вернуть будет нельзя"; return; }
       await purgeCard(p.dataset.purge); draw(); }
