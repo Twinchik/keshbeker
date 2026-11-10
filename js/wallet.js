@@ -213,7 +213,7 @@ function renderDetail(){
   const upd=c.updatedAt? relTime(c.updatedAt):"";
   box.innerHTML=`<div class="panel">
     <div class="panel-h"><div><h2>${esc(c.bank)}</h2><p>${esc(monthName(c.month))}${upd?" · обновлено "+upd:""}</p></div>
-      <div style="display:flex;gap:8px"><button class="btn" type="button" data-edit="${c.id}">Изменить</button><button class="btn ghost" type="button" data-close>Убрать</button></div></div>
+      <div style="display:flex;gap:8px"><button class="btn" type="button" data-edit="${c.id}">Изменить</button></div></div>
     ${stale?`<p class="note" style="color:var(--warn)">Категории за ${esc(monthName(c.month))}. Начался новый месяц — обнови кешбек.</p>`:""}
     <ul class="rows">${rowsHTML(items,max)}</ul>
     ${c.next ? `<div class="nextbox"><h4><span>С 1 ${esc(genMonth(c.next.month))}</span><button class="btn" type="button" data-editnext="${c.id}">Изменить</button></h4><ul class="rows">${rowsHTML(topItems({items:c.next.items}),max)}</ul></div>`
