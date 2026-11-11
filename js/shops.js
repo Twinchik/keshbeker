@@ -226,7 +226,7 @@ function openShop(name="", isNew){
           <button type="button" class="btn ghost" id="shPhDel" hidden>Убрать фото</button></div></div></div>
     <div class="fl" id="shLook"><span class="lab" id="shColorLab">Цвет</span>
       <div class="sw" id="shSw"><button type="button" class="sw-auto" data-st="" style="--c-bg:${shopGradient(name||"магазин")}" aria-label="Цвет по названию магазина"></button>${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}"></button>`).join("")}<button type="button" class="sw-own" id="shOwn" aria-label="Свой цвет"></button></div></div>
-    <div class="fl"><label for="shP">Бонусы по карте магазина, %</label><input class="in" id="shP" inputmode="decimal" placeholder="Например, 5 (можно оставить пустым)"></div>
+    <div class="fl"><label for="shP">Кешбек за использование карты магазина в %</label><input class="in" id="shP" inputmode="decimal"></div>
     <div class="fl" id="shFavBox"><span class="lab lab-h">Любимое на ${esc(monthOnly(nowMonth()))}${qhelp("Любимое","Любимые категории и товары, которые ты выбрал в приложении магазина на этот месяц.")}</span>
       <span class="sublab">Любимые категории</span><div class="favrows" id="shCats"></div>
       <button type="button" class="btn ghost addrow" data-add="cats">+ Категория</button>
