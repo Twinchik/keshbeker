@@ -349,7 +349,7 @@ button,a,label,.card{touch-action:manipulation}
 .part.deliv svg{flex:none;color:var(--muted)}
 .pr-dtotal{font-size:13px;font-weight:600;color:var(--muted)}
 .fchip small{color:var(--muted)}
-@media (max-width:400px){/* search */
+/* search */
 .search{display:flex;flex-direction:column;gap:10px}
 .field{position:relative}
 .field svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
