@@ -295,3 +295,21 @@ if(!window.supabase || cfgBad){
     if(!data.session){ if(lsGet(GUEST)==="1") startGuest(); else showGate(true); }
   });
 }
+
+/* ---------- глазик в полях пароля: показать / скрыть, что вводишь ---------- */
+(() => {
+  const EYE = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  const EYE_OFF = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.5 7 10 7c1.9 0 3.5-.6 4.9-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
+  document.querySelectorAll('input[type="password"]').forEach(inp => {
+    const w = document.createElement("div"); w.className = "pw";
+    inp.before(w); w.appendChild(inp);
+    const b = document.createElement("button"); b.type = "button"; b.className = "pw-eye";
+    const set = show => { inp.type = show ? "text" : "password"; b.innerHTML = show ? EYE_OFF : EYE;
+      b.setAttribute("aria-label", show ? "Скрыть пароль" : "Показать пароль"); b.setAttribute("aria-pressed", show); };
+    set(false); w.appendChild(b);
+    b.addEventListener("pointerdown", e => e.preventDefault());   // не уводить фокус: клавиатура остаётся открытой
+    b.addEventListener("click", () => { set(inp.type === "password"); track("pass_show"); });
+    // перед отправкой прячем обратно — так браузер нормально предложит сохранить пароль
+    inp.form?.addEventListener("submit", () => set(false), true);
+  });
+})();
