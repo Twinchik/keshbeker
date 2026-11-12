@@ -112,7 +112,7 @@ function parseCashback(text){
     if(seen.has(k)){ const it = seen.get(k); it.p = Math.max(it.p, p); return; }
     last = { n: name, p }; items.push(last); seen.set(k, last);
   };
-  const junk = w => { const k = norm(w).replace(/[^a-zа-я]/g, ""); return k.length >= 4 && OCR_UI.some(u => u.includes(k)); };
+  const junk = w => { const k = norm(w).replace(/й/g, "и").replace(/[^a-zа-я]/g, ""); return k.length >= 4 && OCR_UI.some(u => u.replace(/й/g, "и").includes(k)); };   // «ереити» = «перейти» без «й»
   const clean = s => {
     const t = s.split(/\s+/).filter(w => w && !junk(w));
     while(t.length && !/[a-zа-яё]{2}/i.test(t[0])) t.shift();               // значки слева: «©)», «(<)»

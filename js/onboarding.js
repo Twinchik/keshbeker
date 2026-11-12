@@ -91,10 +91,11 @@ function maybeTour(){
 }
 function startTour(){
   if(document.querySelector(".tour") || document.querySelector(".scrim")) return;
+  if(selected){ selected = null; render(); }   // карту убираем обратно — первый шаг как раз «нажми на карту»
   const steps = [
-    { el: () => $("#wallet .card"), t: "Нажми на карту — откроются все её категории." },
+    { el: () => $("#wallet .card"), t: "Нажми на карту — откроются все её категории.", tap: el => { if(!selected) el.click(); } },
     { el: () => $("#q")?.parentElement || $("#q"), t: "Пиши категорию или сразу магазин — лучшая карта встанет первой." },
-    { el: () => $('#viewTabs [data-view="shops"]'), t: "Здесь карты магазинов, любимые категории и акции." }
+    { el: () => $('#viewTabs [data-view="shops"]'), t: "Здесь карты магазинов, любимые категории и акции.", tap: el => el.click() }
   ].filter(s => s.el());
   if(!steps.length) return;
   lsMark(TOUR_KEY);
@@ -120,6 +121,16 @@ function startTour(){
     if(reduceMo()){ t.remove(); return; }
     t.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: "ease-in", fill: "forwards" }).finished.then(() => t.remove()); };
   next.onclick = () => { if(++i >= steps.length) return end(); place(); };
+  // нажатие прямо на подсвеченное место: делает то же, что и само место (открыть карту, Магазины), и ведёт дальше
+  t.addEventListener("click", e => {
+    if(e.target.closest(".tour-pop")) return;
+    const r = hole.getBoundingClientRect();
+    if(e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
+    const s = steps[i], el = s.el(); track("tour_tap", { step: i + 1 });
+    if(i >= steps.length - 1) end(); else { i++; }
+    s.tap?.(el);
+    if(document.querySelector(".tour") === t && i < steps.length && t.isConnected) setTimeout(() => t.isConnected && place(), s.tap ? 120 : 0);
+  });
   t.querySelector(".tour-skip").onclick = end;
   if(!reduceMo()) t.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: "ease-out" });
   place();
