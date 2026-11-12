@@ -3,8 +3,9 @@
 // 2) Быстрый выбор банка в новой карте (название + цвет одним нажатием) — разметка в editor.js.
 // 3) Подсказки категорий под строкой, пока человек вводит категорию.
 // 4) Короткий тур по экрану после первой добавленной карты.
+// 5) Первая карта вместе: пошаговые подсказки прямо в окне новой карты (банк → скриншот → проценты → сохранить).
 
-const WELCOME_KEY = "cashbacker-welcomed", TOUR_KEY = "cashbacker-toured";
+const WELCOME_KEY = "cashbacker-welcomed", TOUR_KEY = "cashbacker-toured", GUIDE_KEY = "cashbacker-guided";
 const lsHas = k => { try{ return !!localStorage.getItem(k); }catch{ return true; } };   // нет доступа к хранилищу — не навязываемся
 const lsMark = k => { try{ localStorage.setItem(k, "1"); }catch{} };
 const reduceMo = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -46,7 +47,7 @@ function showWelcome(){
     if(reduceMo()){ w.remove(); return; }
     w.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(1.02)" }], { duration: 260, easing: "ease-in", fill: "forwards" }).finished.then(() => w.remove());
   };
-  next.onclick = () => { const i = idx(); if(i >= slides.length - 1) return finish(); trk.scrollTo({ left: (i + 1) * trk.clientWidth, behavior: reduceMo() ? "auto" : "smooth" }); };
+  next.onclick = () => { const i = idx(); if(i >= slides.length - 1){ finish(); if(wantGuide()) setTimeout(() => { if(!document.querySelector(".scrim")) openEditor(null); }, 280); return; } trk.scrollTo({ left: (i + 1) * trk.clientWidth, behavior: reduceMo() ? "auto" : "smooth" }); };
   w.querySelector(".wl-skip").onclick = finish;
   if(!reduceMo()) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: "ease-out" });
 }
@@ -125,7 +126,58 @@ function startTour(){
 }
 // «Показать подсказки снова» в профиле
 function replayOnboarding(){
-  try{ localStorage.removeItem(WELCOME_KEY); localStorage.removeItem(TOUR_KEY); }catch{}
+  try{ localStorage.removeItem(WELCOME_KEY); localStorage.removeItem(TOUR_KEY); localStorage.removeItem(GUIDE_KEY); }catch{}
   document.querySelectorAll(".scrim").forEach(s => s.remove());
   showWelcome();
+}
+
+/* ---------- 5. первая карта вместе ----------
+   Плашка сверху окна «Новая карта»: шаг, одна фраза и «Дальше». «Дальше» загорается, когда шаг сделан.
+   Нужное место в окне обводится пульсирующей рамкой. Показываем, пока у человека нет ни одной карты. */
+let guideEnd = null;
+function wantGuide(){ return !lsHas(GUIDE_KEY) && realCards().length === 0; }
+function startGuide(){
+  const sheet = $("#edForm"); if(!sheet || !editing) return;
+  editing.guide = true;
+  const hasCats = () => [...document.querySelectorAll('#edRows [data-f="n"]')].some(x => x.value.trim() && !isBase(x.value))
+    || [...(editing?.items || []), ...(editing?.next?.items || [])].some(i => String(i.n).trim() && !isBase(i.n));
+  const steps = [
+    { el: () => $("#edPicks") || $("#edBank"), t: "Выбери свой банк — или впиши название сам.", ok: () => !!$("#edBank")?.value.trim() },
+    { el: () => $("#edScan"), t: "Загрузи скриншот кешбека из приложения банка — категории заполнятся сами. Или впиши их вручную.", ok: hasCats },
+    { el: () => $("#edRows"), t: "Проверь категории и проценты. Лишнее убери крестиком.", ok: () => true },
+    { el: () => sheet.querySelector('[type="submit"]'), t: "Всё верно? Нажми «Сохранить».", last: true }
+  ];
+  const g = document.createElement("div"); g.className = "guide";
+  g.innerHTML = `<div class="gd-top"><span class="ob-count" aria-live="polite"></span><button type="button" class="gd-skip">Пропустить</button></div>
+    <div class="gd-row"><p aria-live="polite"></p><button type="button" class="btn primary gd-next" disabled>Дальше</button></div>`;
+  sheet.querySelector("h3").after(g);
+  const next = g.querySelector(".gd-next"), p = g.querySelector("p");
+  let i = 0, hi = null;
+  const check = () => { const s = steps[i]; if(!s || s.last) return;
+    const ok = !!s.ok();
+    if(ok && next.disabled && !reduceMo()) next.animate([{ transform: "scale(1)" }, { transform: "scale(1.1)" }, { transform: "scale(1)" }], { duration: 420, easing: "cubic-bezier(.3,1.5,.5,1)" });
+    next.disabled = !ok; };
+  const reveal = el => {   // прокрутить окно так, чтобы нужное место было видно под плашкой
+    const sr = sheet.getBoundingClientRect(), r = el.getBoundingClientRect(), top = sr.top + g.offsetHeight + 16;
+    if(r.top >= top && r.bottom <= sr.bottom - 12) return;
+    sheet.scrollTo({ top: Math.max(0, sheet.scrollTop + r.top - top), behavior: reduceMo() ? "auto" : "smooth" }); };
+  const show = () => { const s = steps[i];
+    hi?.classList.remove("gd-hi"); hi = s.el(); hi?.classList.add("gd-hi");
+    p.textContent = s.t; g.querySelector(".ob-count").textContent = `Шаг ${i + 1} из ${steps.length}`;
+    next.hidden = !!s.last; check();
+    if(!reduceMo()) p.animate([{ opacity: 0, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], { duration: 240, easing: "cubic-bezier(.2,.9,.3,1)" });
+    if(hi) setTimeout(() => reveal(hi), 40); };
+  const recheck = () => setTimeout(check, 0);
+  sheet.addEventListener("input", recheck); sheet.addEventListener("click", recheck); document.addEventListener("ed-change", recheck);
+  next.onclick = () => { if(next.disabled) return; track("guide_step", { s: i + 1 }); i++; show(); };
+  guideEnd = done => {
+    guideEnd = null; lsMark(GUIDE_KEY); track(done ? "guide_done" : "guide_skip", { step: i + 1 });
+    document.removeEventListener("ed-change", recheck); hi?.classList.remove("gd-hi");
+    if(editing) editing.guide = false;
+    if(done || reduceMo()){ g.remove(); return; }
+    g.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(-6px)" }], { duration: 200, easing: "ease-in", fill: "forwards" }).finished.then(() => g.remove());
+  };
+  g.querySelector(".gd-skip").onclick = () => guideEnd?.(false);
+  if(!reduceMo()) g.animate([{ opacity: 0, transform: "translateY(-6px)" }, { opacity: 1, transform: "none" }], { duration: 300, delay: 120, easing: "cubic-bezier(.2,.9,.3,1)", fill: "backwards" });
+  show();
 }

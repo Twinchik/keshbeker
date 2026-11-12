@@ -119,7 +119,7 @@ function render(){
   const wallet=$("#wallet");
   if(!cards.length){
     wallet.style.height="auto";
-    wallet.innerHTML=`<button type="button" class="card empty" id="emptyAdd">Добавь первую карту — банк, цвет и кешбек по категориям на месяц</button>`;
+    wallet.innerHTML=`<button type="button" class="card empty" id="emptyAdd"><b>+ Добавить первую карту</b><span>Помогу за минуту: выбери банк и загрузи скриншот кешбека из его приложения</span></button>`;
     $("#detail").innerHTML=""; return;
   }
   wallet.querySelector(".empty")?.remove();

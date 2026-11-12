@@ -25,6 +25,8 @@ function openEditor(card, startTab="cur"){
     <div class="fl"><span class="lab" id="edColorLab">Цвет</span><div class="sw" id="edSw">${Object.entries(STYLES).map(([k,v])=>`<button type="button" data-st="${k}" style="${styleVars(k)}" aria-label="${v.name}" aria-pressed="${k===editing.style}"></button>`).join("")}<button type="button" class="sw-own" id="edOwn" aria-pressed="${isOwnColor(editing.style)}" style="${isOwnColor(editing.style)?styleVars(editing.style):""}" aria-label="Свой цвет"></button></div></div>
     <div class="fl"><span class="lab lab-h">Кешбек${qhelp("Кешбек по месяцам","«Сейчас» — кешбек, который действует в этом месяце. «Следующий» — категории на следующий месяц: выбери их заранее, 1-го числа они сами станут текущими.")}</span>
       <div class="seg" role="tablist" id="edSeg"><button type="button" role="tab" data-tab="cur">Сейчас<small>${esc(monthOnly(nowMonth()))}</small></button><button type="button" role="tab" data-tab="next">Следующий<small>${esc(monthOnly(addMonth(nowMonth())))}</small></button></div>
+      <label class="btn scan-btn" id="edScan" for="edScanIn"><i class="scan-bar" aria-hidden="true"></i><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 10h8M8 14h5"/></svg><span class="scan-t">Заполнить по скриншоту из банка</span><input class="vh" id="edScanIn" type="file" accept="image/*"></label>
+      <p class="scan-note" id="edScanNote" hidden></p>
       <div id="edRows" style="display:flex;flex-direction:column;gap:6px"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn" id="edAdd">+ Строка</button><button type="button" class="btn ghost" id="edCopy">Скопировать из текущего</button><button type="button" class="btn ghost danger" id="edClearNext">Очистить месяц</button></div></div>
 
@@ -51,7 +53,8 @@ function openEditor(card, startTab="cur"){
   $("#edCopy").onclick=()=>{ editing.next.items=(editing.items||[]).map(i=>({...i})); editing.next.draft=false; drawRows(); };
   $("#edClearNext").onclick=()=>{ editing.next={month:nm,items:[{n:"",p:5},...(editing.items||[]).filter(i=>isBase(i.n)).map(i=>({...i}))],draft:true,cleared:true}; tab0="next"; applyTab("next",true); };
   setTab(tab,true);
-  setTimeout(()=>$("#edBank").focus(),50);
+  const guided = editing.isNew && wantGuide();
+  if(!guided) setTimeout(()=>$("#edBank").focus(),50);
   s.addEventListener("click",e=>{ if(e.target===s) closeEditor(); });
   $("#edCancel").onclick=closeEditor;
   $("#edSw").onclick=e=>{const b=e.target.closest("[data-st]"); if(!b)return; editing.style=b.dataset.st; editing.custom=null; $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed",x===b)); $("#edOwn").setAttribute("aria-pressed","false"); drawPhoto();};
@@ -63,7 +66,7 @@ function openEditor(card, startTab="cur"){
     $("#edSw").querySelectorAll("[data-st]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.st===c));
     const own=$("#edOwn"), isOwn=isOwnColor(c); own.setAttribute("aria-pressed",isOwn); own.setAttribute("style",isOwn?styleVars(c):"");
     $("#edPicks").querySelectorAll("[data-bank]").forEach(x=>x.setAttribute("aria-pressed",x===b)); drawPhoto(); track("bank_pick",{b:b.dataset.bank});
-    setTimeout(()=>$("#edN0")?.focus(),60); });
+    if(!editing.guide && !editing.scanning) setTimeout(()=>$("#edN0")?.focus(),60); });
   $("#edOwn").onclick=async()=>{
     const hex=await openColorPicker(isOwnColor(editing.style)?editing.style:"#e8475a", $("#edBank").value.trim()||"Карта"); if(!hex) return; track("own_color");
     editing.style=hex; editing.custom=null;
@@ -83,6 +86,35 @@ function openEditor(card, startTab="cur"){
     drawPhoto(); };
   $("#edCam").onchange=onFile; $("#edGal").onchange=onFile;
   $("#edPhDel").onclick=()=>{ editing.photo=null; editing.custom=null; drawPhoto(); };
+  // кешбек со скриншота: категории, проценты, месяц и банк — сами (распознавание в scan.js)
+  const scanBtn=$("#edScan"), scanNote=$("#edScanNote"), scanLab=scanBtn.querySelector(".scan-t"), scanLab0=scanLab.textContent;
+  const note=(t,bad)=>{ scanNote.hidden=!t; scanNote.textContent=t||""; scanNote.classList.toggle("bad",!!bad); };
+  $("#edScanIn").onchange=async e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f||scanBtn.classList.contains("busy")) return;
+    const me=editing; scanBtn.classList.add("busy"); note("");
+    const pr=(t,p)=>{ scanLab.textContent=t; scanBtn.style.setProperty("--pr",Math.round(p*100)+"%"); };
+    let res=null;
+    try{ res=await scanCashback(f,(st,p)=> st==="read" ? pr(`Читаю скриншот… ${Math.round(p*100)}%`, .3+p*.7) : pr("Готовлю распознавание…", p*.3)); }catch(err){ console.warn(err); }
+    if(editing!==me) return;                                     // окно успели закрыть
+    scanBtn.classList.remove("busy"); scanLab.textContent=scanLab0; scanBtn.style.removeProperty("--pr");
+    if(!res){ track("scan_fail",{why:"error"}); return note(navigator.onLine?"Не получилось распознать. Попробуй ещё раз или впиши категории сам.":"Нужен интернет: распознавание загружается в первый раз.",true); }
+    if(!res.items.length){ track("scan_fail",{why:"empty"}); return note("Не нашёл на скриншоте категорий с процентами. Нужен экран, где видно, например, «5% Кино».",true); }
+    if(!$("#edBank").value.trim() && res.bank){ editing.scanning=true;
+      const b=$("#edPicks")?.querySelector(`[data-bank="${res.bank}"]`); if(b) b.click(); else { $("#edBank").value=res.bank; $("#edBank").dispatchEvent(new Event("input",{bubbles:true})); }
+      editing.scanning=false; }
+    // месяц со скриншота: «в декабре», а сейчас ноябрь — кладём в «Следующий»
+    const mi=m=>+m.split("-")[1]-1, t = res.month===mi(nm) && res.month!==mi(nowMonth()) ? "next" : res.month===mi(nowMonth()) ? "cur" : tab;
+    syncRows();
+    if(t!==tab){ tab0=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t)); applyTab(t,true); }
+    const rows=curRows().filter(r=>String(r.n).trim()), own=rows.filter(r=>!isBase(r.n)), base=rows.filter(r=>isBase(r.n));
+    for(const it of res.items){ const ex=own.find(r=>norm(r.n)===norm(it.n)); if(ex) ex.p=it.p; else own.push({n:it.n,p:it.p}); }
+    if(res.base!=null){ if(base.length) base[0].p=res.base; else base.push({n:"Всё остальное",p:res.base}); }
+    if(t==="next"){ editing.next.items=[...own,...base]; editing.next.draft=false; } else editing.items=[...own,...base];
+    drawRows();
+    if(!matchMedia("(prefers-reduced-motion: reduce)").matches) $("#edRows").querySelectorAll(".erow").forEach((r,i)=>r.animate([{opacity:0,transform:"translateY(6px)"},{opacity:1,transform:"none"}],{duration:260,delay:i*45,easing:"cubic-bezier(.2,.9,.3,1)",fill:"backwards"}));
+    const n=res.items.length, w=n%10===1&&n%100!==11?"категорию":[2,3,4].includes(n%10)&&![12,13,14].includes(n%100)?"категории":"категорий";
+    note(`Нашёл ${n} ${w} — проверь проценты.`+(t==="next"?` Это кешбек на ${monthOnly(nm)}, добавил в «Следующий».`:""));
+    track("scan_ok",{n}); document.dispatchEvent(new Event("ed-change"));
+  };
   $("#edAdd").onclick=()=>{ syncRows(); curRows().push({n:"",p:5}); if(tab==="next") editing.next.draft=false; drawRows(); const ins=$("#edRows").querySelectorAll("input[data-f=n]"); ins[ins.length-1]?.focus(); };
   const del=$("#edDel"); if(del) del.onclick=()=>{ const id=editing.id; track("card_trash"); closeEditor(); trashCard(id); };
   $("#edForm").onsubmit=async e=>{ e.preventDefault(); syncRows();
@@ -91,8 +123,10 @@ function openEditor(card, startTab="cur"){
     const c={id:editing.id,bank:$("#edBank").value.trim()||"Карта",label:$("#edLabel").value.trim(),style:editing.style,order:editing.order??0,month:nowMonth(),
       photo:editing.photo||null,custom:editing.custom||null,shops:editing.shops||[],items:cleanItems(editing.items),next: keepNext ? {month:editing.next.month, items:nextItems} : null,sample:false,updatedAt:Date.now()};
     const wasNew=editing.isNew; track(wasNew?"card_add":"card_edit"); if(keepNext) track("next_month");
+    if(editing.guide) guideEnd?.(true);
     closeEditor(); putCard(c); selected=c.id; render(); if(wasNew) maybeTour(); await store.save(c); };
   s.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#phScrim")) closeEditor(); });
+  if(guided) startGuide();
 }
 const curRows=()=> tab==="next" ? editing.next.items : editing.items;
 // фото обрезается по пропорциям банковской карты и сжимается, чтобы влезть в хранилище
@@ -125,7 +159,7 @@ function syncRows(){
     if(n!==it.n||p!==String(it.p)) changed=true; it.n=n; it.p=p; });
   if(tab==="next" && changed) editing.next.draft=false;
 }
-function closeEditor(){ $("#scrim")?.remove(); editing=null; }
+function closeEditor(){ $("#scrim")?.remove(); editing=null; guideEnd=null; hideCatSuggest?.(); }
 
 // магазины без карты хранятся отдельной записью "_shops" рядом с картами
 const LOOSE_ID="_shops";
