@@ -27,9 +27,8 @@ function showWelcome(){
         <div class="wa-pick"><div class="wa-card dim d1" style="--bg:linear-gradient(135deg,#43e97b,#1e9e57)"><b>Сбер</b><span>5%</span><i class="wa-chip"></i><em></em><em></em></div><div class="wa-card best" style="--bg:linear-gradient(135deg,#ff5f6d,#c2185b)"><b>Альфа</b><i class="wa-chip"></i><em></em><em></em></div><span class="wa-badge">10%</span></div></div>`,
       t: "Лучшая карта — первой", d: "Напиши категорию или сразу магазин, например «Пятёрочка», — нужная карта встанет вперёд." },
     { art: `<div class="wa-shopart"><div class="wa-lc" style="--bg:linear-gradient(135deg,#a8e063,#2e9d4f)"><b>Пятёрочка</b><span>10%</span></div>
-        <div class="wa-tags"><span style="--t:#ff9f43">Овощи <b>15%</b></span><span style="--t:#54a0ff">Молоко <b>10%</b></span><span style="--t:#ee5a9f">Хлеб <b>5%</b></span></div>
-        <div class="wa-deal">Шоколад <b>−30%</b></div></div>`,
-      t: "Магазины и акции", d: "Карты лояльности, любимые категории и скидки — рядом." }
+        <div class="wa-tags"><span style="--t:#ff9f43">Овощи <b>15%</b></span><span style="--t:#54a0ff">Молоко <b>10%</b></span><span style="--t:#ee5a9f">Хлеб <b>5%</b></span></div></div>`,
+      t: "Карты магазинов", d: "Карты лояльности и любимые категории — рядом с банковскими." }
   ];
   const w = document.createElement("div"); w.className = "welcome"; w.setAttribute("role","dialog"); w.setAttribute("aria-modal","true"); w.setAttribute("aria-label","Добро пожаловать");
   w.innerHTML = `<div class="wl-top"><span class="ob-count" aria-live="polite">1 из ${slides.length}</span><button type="button" class="wl-skip">Пропустить</button></div>
@@ -95,7 +94,7 @@ function startTour(){
   const steps = [
     { el: () => $("#wallet .card"), t: "Нажми на карту — откроются все её категории.", tap: el => { if(!selected) el.click(); } },
     { el: () => $("#q")?.parentElement || $("#q"), t: "Пиши категорию или сразу магазин — лучшая карта встанет первой." },
-    { el: () => $('#viewTabs [data-view="shops"]'), t: "Здесь карты магазинов, любимые категории и акции.", tap: el => el.click() }
+    { el: () => $('#viewTabs [data-view="shops"]'), t: "Здесь карты магазинов и любимые категории.", tap: el => el.click() }
   ].filter(s => s.el());
   if(!steps.length) return;
   lsMark(TOUR_KEY);

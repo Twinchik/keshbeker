@@ -349,9 +349,7 @@ button,a,label,.card{touch-action:manipulation}
 .part.deliv svg{flex:none;color:var(--muted)}
 .pr-dtotal{font-size:13px;font-weight:600;color:var(--muted)}
 .fchip small{color:var(--muted)}
-.erow.deal{grid-template-columns:1fr 56px 124px 30px}
-@media (max-width:400px){.erow.deal{grid-template-columns:1fr 56px 30px}.erow.deal [data-f=u]{grid-column:1/3}}
-/* search */
+@media (max-width:400px){/* search */
 .search{display:flex;flex-direction:column;gap:10px}
 .field{position:relative}
 .field svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
@@ -536,7 +534,6 @@ html.scroll-lock,html.scroll-lock body{overflow:hidden!important}
 .wa-tags{position:absolute;top:104px;display:flex;gap:6px}
 .wa-tags span{white-space:nowrap;padding:6px 10px;border-radius:999px;font-size:12px;color:var(--ink);background:color-mix(in srgb,var(--t) 22%,var(--surface));border:1px solid color-mix(in srgb,var(--t) 55%,transparent)}
 .wa-tags b{color:var(--t)}
-.wa-deal{position:absolute;top:150px;padding:6px 12px;border-radius:8px;background:#ff3b30;color:#fff;font-size:13px;font-weight:600;transform:rotate(-4deg);box-shadow:0 8px 18px rgba(255,59,48,.35)}
 /* лёгкое «парение» картинок */
 .wl-art>div{animation:waFloat 4s ease-in-out infinite}
 @keyframes waFloat{0%,100%{translate:0 0}50%{translate:0 -6px}}
