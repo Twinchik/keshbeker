@@ -231,6 +231,10 @@ function ruErr(e){
   }
   if(code==="reauthentication_needed" || /reauthenticat/i.test(m)) return "Ссылка для смены пароля устарела. Нажми «Забыл пароль» ещё раз.";
   if(/password/i.test(m)) return "Не получилось сменить пароль: "+m;
+  // письмо не ушло: Supabase не смог отправить его через почтовый сервер
+  if(/error sending .*confirmation/i.test(m)) return "Не получилось отправить письмо для подтверждения почты. Попробуй ещё раз чуть позже.";
+  if(/error sending .*(recovery|reset)/i.test(m)) return "Не получилось отправить письмо для смены пароля. Попробуй ещё раз чуть позже.";
+  if(/error sending .*email/i.test(m)) return "Не получилось отправить письмо. Попробуй ещё раз чуть позже.";
   if(/rate limit/i.test(m)) return "Слишком много попыток. Подожди пару минут.";
   if(/fetch|network/i.test(m) || !m) return "Нет связи с сервером. Проверь интернет или включи VPN.";
   return "Не получилось: "+m;
