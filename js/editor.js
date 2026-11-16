@@ -5,7 +5,7 @@
 let tab="cur";
 function openEditor(card, startTab="cur"){
   tab=startTab;
-  editing = card ? JSON.parse(JSON.stringify(card)) : {id:uid(),bank:"",label:"",style:"blue",order:(Math.max(0,...allCards.map(c=>c.order??0))+1),month:nowMonth(),items:[{n:"",p:5},{n:"Всё остальное",p:1}],shops:[],isNew:true};
+  editing = card ? JSON.parse(JSON.stringify(card)) : {id:uid(),bank:"",label:"",style:"blue",order:(Math.max(0,...allCards.map(c=>c.order??0))+1),month:nowMonth(),items:[{n:"",p:5}],shops:[],isNew:true};   // без заготовки «Всё остальное 1%»: базовый кешбек человек добавит сам, если он есть
   const s=document.createElement("div"); s.className="scrim"; s.id="scrim";
   s.innerHTML=`<form class="sheet" id="edForm" autocomplete="off" role="dialog" aria-modal="true" aria-label="Карта">
     <h3>${editing.isNew?"Новая карта":"Изменить карту"}</h3>
