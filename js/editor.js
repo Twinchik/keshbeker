@@ -105,7 +105,10 @@ function openEditor(card, startTab="cur"){
     const mi=m=>+m.split("-")[1]-1, t = res.month===mi(nm) && res.month!==mi(nowMonth()) ? "next" : res.month===mi(nowMonth()) ? "cur" : tab;
     syncRows();
     if(t!==tab){ tab0=t; $("#edSeg").querySelectorAll("button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t)); applyTab(t,true); }
-    const rows=curRows().filter(r=>String(r.n).trim()), own=rows.filter(r=>!isBase(r.n)), base=rows.filter(r=>isBase(r.n));
+    const rows=curRows().filter(r=>String(r.n).trim()), own=rows.filter(r=>!isBase(r.n));
+    let base=rows.filter(r=>isBase(r.n));
+    // в новой карте «Всё остальное 1%» — заготовка; на скриншоте базового кешбека нет — заготовку убираем, чтобы не выдать её за распознанную
+    if(res.base==null && editing.isNew) base=base.filter(r=>!(norm(r.n)===norm("Всё остальное") && Number(String(r.p).replace(",","."))===1));
     for(const it of res.items){ const ex=own.find(r=>norm(r.n)===norm(it.n)); if(ex) ex.p=it.p; else own.push({n:it.n,p:it.p}); }
     if(res.base!=null){ if(base.length) base[0].p=res.base; else base.push({n:"Всё остальное",p:res.base}); }
     if(t==="next"){ editing.next.items=[...own,...base]; editing.next.draft=false; } else editing.items=[...own,...base];
