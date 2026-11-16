@@ -175,7 +175,7 @@ function startSynced(){
   unsub=col.onSnapshot(snap=>{
     setAll(applyOrderOverride(snap.docs.map(d=>({...d.data(),id:d.id}))));
     applyRoll(); writeLS(allCards); drawAvatar(); hideSplash();
-    if(firstSnap){ firstSnap=false; setTimeout(maybeWelcome,300); }   // приветствие — только когда уже известно, есть ли у аккаунта карты
+    if(firstSnap){ firstSnap=false; maybeGuide(); }   // карт нет — откроется «Новая карта» с подсказками
     if(editing) return; render();
   }, e=>setStatus("Нет связи с базой: "+(e.message||e)+". Проверь интернет или VPN."));
 }
@@ -190,7 +190,7 @@ function startGuest(){
   store={ save:async()=>writeLS(allCards), remove:async()=>writeLS(allCards) };
   applyRoll(); writeLS(allCards); render();
   setStatus("Без входа карты хранятся только в этом браузере");
-  maybeWelcome();
+  maybeGuide();
 }
 async function signOut(){
   unsub?.(); unsub=null; store=null;
@@ -278,7 +278,7 @@ $("#resetForm").addEventListener("submit",async e=>{
 setAuthMode("in");
 const cfgBad = !CFG.url || !CFG.key || /ВСТАВЬ/.test(CFG.url+CFG.key) || /\/rest\/v1/.test(CFG.url);
 if(!window.supabase || cfgBad){
-  if(lsGet(GUEST)==="1") startGuest(); else showGate(true);
+  if(lsGet(GUEST)==="1") startGuest(); else { showGate(true); maybeWelcome(); }
   authMsg(!window.supabase ? "Не загрузилась библиотека входа. Проверь интернет или включи VPN и обнови страницу."
     : !window.KESHBEKER_CONFIG ? "Не загрузился config.js или в нём ошибка. Проверь, что файл загружен на сайт и кавычки в нём прямые \"…\", а не «…» или “…”."
     : /ВСТАВЬ/.test(CFG.url+CFG.key) ? "В config.js остался текст ВСТАВЬ_СЮДА — впиши туда адрес проекта и ключ anon public."
@@ -296,7 +296,7 @@ if(!window.supabase || cfgBad){
     if(!sess) started=false;
   });
   sb.auth.getSession().then(({data})=>{
-    if(!data.session){ if(lsGet(GUEST)==="1") startGuest(); else showGate(true); }
+    if(!data.session){ if(lsGet(GUEST)==="1") startGuest(); else { showGate(true); maybeWelcome(); } }   // первый раз на сайте — сначала приветствие, потом вход
   });
 }
 

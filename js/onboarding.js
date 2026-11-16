@@ -1,23 +1,28 @@
 // Кешбекер — помощь новичкам.
-// 1) Приветствие: три коротких экрана при самом первом входе.
+// 1) Приветствие: три коротких экрана при самом первом открытии сайта, ещё до входа.
 // 2) Быстрый выбор банка в новой карте (название + цвет одним нажатием) — разметка в editor.js.
 // 3) Подсказки категорий под строкой, пока человек вводит категорию.
 // 4) Короткий тур по экрану после первой добавленной карты.
 // 5) Первая карта вместе: пошаговые подсказки прямо в окне новой карты (банк → скриншот → проценты → сохранить).
 
-const WELCOME_KEY = "cashbacker-welcomed", TOUR_KEY = "cashbacker-toured", GUIDE_KEY = "cashbacker-guided";
+const WELCOME_KEY = "cashbacker-welcomed", TOUR_KEY = "cashbacker-toured", GUIDE_KEY = "cashbacker-guided", GUIDE_AUTO_KEY = "cashbacker-guide-auto";
 const lsHas = k => { try{ return !!localStorage.getItem(k); }catch{ return true; } };   // нет доступа к хранилищу — не навязываемся
 const lsMark = k => { try{ localStorage.setItem(k, "1"); }catch{} };
 const reduceMo = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 const realCards = () => cards.filter(c => c.id !== LOOSE_ID && !c.sample);
 
 /* ---------- 1. приветствие ----------
-   Показываем, только если на этом устройстве его ещё не видели и человек действительно новичок:
-   гость — или аккаунт без карт и без пометки «видел» (пометка хранится в аккаунте, видна со всех устройств). */
+   Показываем при самом первом открытии сайта — ещё до входа и регистрации, поверх экрана входа,
+   чтобы человек сначала понял, что это за сайт. Запоминается в этом браузере. */
 function maybeWelcome(){
   if(lsHas(WELCOME_KEY) || document.querySelector(".welcome")) return;
-  if(account?.synced && (realCards().length || looseDoc().welcomed)){ lsMark(WELCOME_KEY); return; }
   showWelcome();
+}
+// после входа (гостем или в аккаунт): если карт ещё нет — сразу открываем «Новую карту» с подсказками по шагам
+function maybeGuide(){
+  if(!wantGuide() || lsHas(GUIDE_AUTO_KEY)) return;   // сами открываем один раз; дальше — кнопкой «+ Добавить первую карту»
+  lsMark(GUIDE_AUTO_KEY);
+  setTimeout(() => { if(wantGuide() && !document.querySelector(".scrim, .welcome, .hpop-catch") && $("#gate").hidden) openEditor(null); }, 350);
 }
 function showWelcome(){
   const slides = [
@@ -46,7 +51,7 @@ function showWelcome(){
     if(reduceMo()){ w.remove(); return; }
     w.animate([{ opacity: 1 }, { opacity: 0, transform: "scale(1.02)" }], { duration: 260, easing: "ease-in", fill: "forwards" }).finished.then(() => w.remove());
   };
-  next.onclick = () => { const i = idx(); if(i >= slides.length - 1){ finish(); if(wantGuide()) setTimeout(() => { if(!document.querySelector(".scrim")) openEditor(null); }, 280); return; } trk.scrollTo({ left: (i + 1) * trk.clientWidth, behavior: reduceMo() ? "auto" : "smooth" }); };
+  next.onclick = () => { const i = idx(); if(i >= slides.length - 1) return finish(); trk.scrollTo({ left: (i + 1) * trk.clientWidth, behavior: reduceMo() ? "auto" : "smooth" }); };
   w.querySelector(".wl-skip").onclick = finish;
   if(!reduceMo()) w.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: "ease-out" });
 }
@@ -136,7 +141,7 @@ function startTour(){
 }
 // «Показать подсказки снова» в профиле
 function replayOnboarding(){
-  try{ localStorage.removeItem(WELCOME_KEY); localStorage.removeItem(TOUR_KEY); localStorage.removeItem(GUIDE_KEY); }catch{}
+  try{ localStorage.removeItem(WELCOME_KEY); localStorage.removeItem(TOUR_KEY); localStorage.removeItem(GUIDE_KEY); localStorage.removeItem(GUIDE_AUTO_KEY); }catch{}
   document.querySelectorAll(".scrim").forEach(s => s.remove());
   showWelcome();
 }
