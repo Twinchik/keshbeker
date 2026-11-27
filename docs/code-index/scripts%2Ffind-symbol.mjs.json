@@ -1,0 +1,15 @@
+{
+  "file": "scripts/find-symbol.mjs",
+  "purpose": "",
+  "imports": [
+    {"source":"node:fs","names":["readdirSync","readFileSync"]},
+    {"source":"node:path","names":["path"]},
+    {"source":"./generate-code-map.mjs","names":["indexDir","root"]}
+  ],
+  "exports": [],
+  "symbols": [
+    {"name":"readdirSync, readFileSync","type":"import","file":"scripts/find-symbol.mjs","start":1,"end":1,"signature":"import from node:fs","description":"","tests":[]},
+    {"name":"path","type":"import","file":"scripts/find-symbol.mjs","start":2,"end":2,"signature":"import from node:path","description":"","tests":[]},
+    {"name":"indexDir, root","type":"import","file":"scripts/find-symbol.mjs","start":3,"end":3,"signature":"import from ./generate-code-map.mjs","description":"","tests":[]}
+  ]
+}
