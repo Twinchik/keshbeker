@@ -1,0 +1,13 @@
+{
+  "file": "js/metrics.js",
+  "purpose": "Подключает Яндекс Метрику и регистрирует просмотры разделов, действия и поисковые запросы.",
+  "imports": [],
+  "exports": [],
+  "symbols": [
+    {"name":"track","type":"function","file":"js/metrics.js","start":12,"end":12,"signature":"track(goal, params)","description":"","tests":[]},
+    {"name":"trackPage","type":"function","file":"js/metrics.js","start":14,"end":14,"signature":"trackPage(name)","description":"","tests":[]},
+    {"name":"trackUser","type":"function","file":"js/metrics.js","start":16,"end":16,"signature":"trackUser(id)","description":"","tests":[]},
+    {"name":"deviceId","type":"function","file":"js/metrics.js","start":17,"end":20,"signature":"deviceId()","description":"","tests":[]},
+    {"name":"hideKeys","type":"arrow","file":"js/metrics.js","start":23,"end":23,"signature":"hideKeys(root)","description":"","tests":[]}
+  ]
+}

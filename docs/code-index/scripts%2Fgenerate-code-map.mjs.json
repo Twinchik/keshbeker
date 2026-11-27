@@ -1,0 +1,46 @@
+{
+  "file": "scripts/generate-code-map.mjs",
+  "purpose": "",
+  "imports": [
+    {"source":"@babel/parser","names":["parse"]},
+    {"source":"node:buffer","names":["isUtf8"]},
+    {"source":"node:child_process","names":["execFileSync"]},
+    {"source":"node:fs","names":["lstatSync","mkdirSync","readFileSync","readdirSync","unlinkSync","writeFileSync"]},
+    {"source":"node:path","names":["path"]},
+    {"source":"node:url","names":["fileURLToPath"]}
+  ],
+  "exports": [
+    {"name":"root"},
+    {"name":"indexDir"},
+    {"name":"indexSource"},
+    {"name":"syncIndex"}
+  ],
+  "symbols": [
+    {"name":"parse","type":"import","file":"scripts/generate-code-map.mjs","start":1,"end":1,"signature":"import from @babel/parser","description":"","tests":[]},
+    {"name":"isUtf8","type":"import","file":"scripts/generate-code-map.mjs","start":2,"end":2,"signature":"import from node:buffer","description":"","tests":[]},
+    {"name":"execFileSync","type":"import","file":"scripts/generate-code-map.mjs","start":3,"end":3,"signature":"import from node:child_process","description":"","tests":[]},
+    {"name":"lstatSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync","type":"import","file":"scripts/generate-code-map.mjs","start":4,"end":4,"signature":"import from node:fs","description":"","tests":[]},
+    {"name":"path","type":"import","file":"scripts/generate-code-map.mjs","start":5,"end":5,"signature":"import from node:path","description":"","tests":[]},
+    {"name":"fileURLToPath","type":"import","file":"scripts/generate-code-map.mjs","start":6,"end":6,"signature":"import from node:url","description":"","tests":[]},
+    {"name":"root","type":"export","file":"scripts/generate-code-map.mjs","start":8,"end":8,"signature":"export root","description":"","tests":[]},
+    {"name":"indexDir","type":"export","file":"scripts/generate-code-map.mjs","start":9,"end":9,"signature":"export indexDir","description":"","tests":[]},
+    {"name":"nameOf","type":"function","file":"scripts/generate-code-map.mjs","start":16,"end":21,"signature":"nameOf(node)","description":"","tests":[]},
+    {"name":"parameter","type":"function","file":"scripts/generate-code-map.mjs","start":23,"end":28,"signature":"parameter(node)","description":"","tests":[]},
+    {"name":"summary","type":"function","file":"scripts/generate-code-map.mjs","start":30,"end":34,"signature":"summary(comments)","description":"","tests":[]},
+    {"name":"parseFile","type":"function","file":"scripts/generate-code-map.mjs","start":36,"end":41,"signature":"parseFile(source, file)","description":"","tests":[]},
+    {"name":"walk","type":"function","file":"scripts/generate-code-map.mjs","start":44,"end":53,"signature":"walk(node, visit, ancestors = …)","description":"","tests":[]},
+    {"name":"bindingNames","type":"function","file":"scripts/generate-code-map.mjs","start":55,"end":63,"signature":"bindingNames(node)","description":"","tests":[]},
+    {"name":"symbolIdentity","type":"function","file":"scripts/generate-code-map.mjs","start":65,"end":71,"signature":"symbolIdentity(node, parent)","description":"","tests":[]},
+    {"name":"isComponent","type":"function","file":"scripts/generate-code-map.mjs","start":73,"end":82,"signature":"isComponent(node, name)","description":"","tests":[]},
+    {"name":"indexSource","type":"export","file":"scripts/generate-code-map.mjs","start":84,"end":149,"signature":"export indexSource","description":"","tests":[]},
+    {"name":"indexSource","type":"function","file":"scripts/generate-code-map.mjs","start":84,"end":149,"signature":"indexSource(source, file, purpose = …)","description":"","tests":["tests/unit/code-index.test.mjs"]},
+    {"name":"add","type":"arrow","file":"scripts/generate-code-map.mjs","start":88,"end":90,"signature":"add(node, name, type, signature, description = …)","description":"","tests":[]},
+    {"name":"fileList","type":"function","file":"scripts/generate-code-map.mjs","start":151,"end":154,"signature":"fileList(base)","description":"","tests":[]},
+    {"name":"readSource","type":"function","file":"scripts/generate-code-map.mjs","start":156,"end":165,"signature":"readSource(base, file)","description":"","tests":[]},
+    {"name":"moduleDescriptions","type":"function","file":"scripts/generate-code-map.mjs","start":167,"end":170,"signature":"moduleDescriptions(base)","description":"","tests":[]},
+    {"name":"addTestLinks","type":"function","file":"scripts/generate-code-map.mjs","start":172,"end":197,"signature":"addTestLinks(base, files, modules)","description":"","tests":[]},
+    {"name":"serializeIndex","type":"function","file":"scripts/generate-code-map.mjs","start":199,"end":208,"signature":"serializeIndex(module)","description":"","tests":[]},
+    {"name":"syncIndex","type":"export","file":"scripts/generate-code-map.mjs","start":210,"end":243,"signature":"export syncIndex","description":"","tests":[]},
+    {"name":"syncIndex","type":"function","file":"scripts/generate-code-map.mjs","start":210,"end":243,"signature":"syncIndex(base = …, {…} = …)","description":"","tests":["tests/unit/code-index.test.mjs"]}
+  ]
+}

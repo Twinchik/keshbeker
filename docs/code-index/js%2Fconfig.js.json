@@ -1,0 +1,7 @@
+{
+  "file": "js/config.js",
+  "purpose": "Адрес проекта Supabase и публичный ключ для клиентского подключения.",
+  "imports": [],
+  "exports": [],
+  "symbols": []
+}

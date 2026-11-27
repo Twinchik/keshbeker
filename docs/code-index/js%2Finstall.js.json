@@ -1,0 +1,12 @@
+{
+  "file": "js/install.js",
+  "purpose": "Показывает кнопку установки там, где браузер её поддерживает, и инструкцию по добавлению на экран «Домой» на iOS.",
+  "imports": [],
+  "exports": [],
+  "symbols": [
+    {"name":"isStandalone","type":"arrow","file":"js/install.js","start":10,"end":10,"signature":"isStandalone()","description":"","tests":[]},
+    {"name":"canOfferInstall","type":"function","file":"js/install.js","start":14,"end":14,"signature":"canOfferInstall()","description":"","tests":[]},
+    {"name":"refreshInstallUI","type":"function","file":"js/install.js","start":15,"end":18,"signature":"refreshInstallUI()","description":"","tests":[]},
+    {"name":"showIOSHelp","type":"function","file":"js/install.js","start":26,"end":40,"signature":"showIOSHelp()","description":"","tests":[]}
+  ]
+}

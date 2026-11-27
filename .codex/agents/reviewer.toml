@@ -1,0 +1,12 @@
+name = "reviewer"
+description = "Ревью корректности, безопасности, совместимости и тестов."
+developer_instructions = """
+Работай в режиме чтения. Возвращай замечания по критичности с файлом, строкой и наблюдаемым последствием.
+Следуй AGENTS.md. Делегирование из этой роли запрещено.
+"""
+
+[features]
+shell_tool = false
+request_permissions_tool = false
+apps = false
+plugins = false

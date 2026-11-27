@@ -1,0 +1,32 @@
+{
+  "file": "js/scan.js",
+  "purpose": "Распознаёт банковские скриншоты и извлекает из текста категории кешбека и проценты.",
+  "imports": [],
+  "exports": [
+    {"name":"parseCashback"},
+    {"name":"layoutText"}
+  ],
+  "symbols": [
+    {"name":"loadOcr","type":"function","file":"js/scan.js","start":8,"end":16,"signature":"loadOcr()","description":"","tests":[]},
+    {"name":"s.onload","type":"arrow","file":"js/scan.js","start":12,"end":12,"signature":"s.onload()","description":"","tests":[]},
+    {"name":"s.onerror","type":"arrow","file":"js/scan.js","start":13,"end":13,"signature":"s.onerror()","description":"","tests":[]},
+    {"name":"ocrGetWorker","type":"function","file":"js/scan.js","start":17,"end":24,"signature":"async ocrGetWorker()","description":"","tests":[]},
+    {"name":"logger","type":"arrow","file":"js/scan.js","start":21,"end":21,"signature":"logger(m)","description":"","tests":[]},
+    {"name":"ocrImage","type":"function","file":"js/scan.js","start":26,"end":38,"signature":"async ocrImage(file)","description":"","tests":[]},
+    {"name":"i.onload","type":"arrow","file":"js/scan.js","start":29,"end":29,"signature":"i.onload()","description":"","tests":[]},
+    {"name":"scanCashback","type":"function","file":"js/scan.js","start":40,"end":51,"signature":"async scanCashback(file, onStep)","description":"","tests":[]},
+    {"name":"ocrProgress","type":"arrow","file":"js/scan.js","start":41,"end":44,"signature":"ocrProgress(m)","description":"","tests":[]},
+    {"name":"layoutText","type":"function","file":"js/scan.js","start":65,"end":103,"signature":"layoutText(lines, W)","description":"","tests":[]},
+    {"name":"H","type":"arrow","file":"js/scan.js","start":75,"end":75,"signature":"H(r)","description":"","tests":[]},
+    {"name":"isPct","type":"arrow","file":"js/scan.js","start":76,"end":76,"signature":"isPct(s)","description":"","tests":[]},
+    {"name":"isTile","type":"arrow","file":"js/scan.js","start":77,"end":77,"signature":"isTile(r)","description":"","tests":[]},
+    {"name":"col","type":"arrow","file":"js/scan.js","start":81,"end":81,"signature":"col(s)","description":"","tests":[]},
+    {"name":"free","type":"arrow","file":"js/scan.js","start":82,"end":82,"signature":"free(k)","description":"","tests":[]},
+    {"name":"parseCashback","type":"function","file":"js/scan.js","start":104,"end":164,"signature":"parseCashback(text)","description":"","tests":["tests/integration/cashback-flow.test.mjs","tests/unit/scan.test.mjs"]},
+    {"name":"add","type":"arrow","file":"js/scan.js","start":108,"end":114,"signature":"add(name, p)","description":"","tests":[]},
+    {"name":"junk","type":"arrow","file":"js/scan.js","start":115,"end":115,"signature":"junk(w)","description":"","tests":[]},
+    {"name":"clean","type":"arrow","file":"js/scan.js","start":116,"end":124,"signature":"clean(s)","description":"","tests":[]},
+    {"name":"parseCashback","type":"export","file":"js/scan.js","start":165,"end":165,"signature":"export parseCashback","description":"","tests":[]},
+    {"name":"layoutText","type":"export","file":"js/scan.js","start":165,"end":165,"signature":"export layoutText","description":"","tests":[]}
+  ]
+}
